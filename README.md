@@ -23,6 +23,7 @@ This project can run with PHP-Apache and MySQL through Docker Compose.
 
 - `app`: PHP 8.2 + Apache
 - `db`: MySQL 8.0
+- `phpmyadmin`: Browser-based MySQL management
 
 ### Run
 
@@ -33,6 +34,7 @@ docker compose up --build
 Open:
 
 - `http://localhost:8080`
+- `http://localhost:8081` for phpMyAdmin
 
 ## Database Setup
 
@@ -45,6 +47,7 @@ Default Compose values:
 - `DB_USER=vcs_user`
 - `DB_PASSWORD=vcs_password`
 - Host MySQL port: `3307`
+- phpMyAdmin port: `8081`
 
 The first database start loads the schema from `docker/mysql/init/01-schema.sql`.
 
