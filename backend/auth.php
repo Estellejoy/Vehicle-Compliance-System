@@ -3,7 +3,7 @@
 session_start();
 
 // 1. Import database connection
-require_once '../config/config.php';
+require_once '../config/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['username']);
