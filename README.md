@@ -54,8 +54,31 @@ The init schema creates these tables:
 
 - `users`
 - `vehicles`
+- `compliance_records`
+- `service_records`
+- `notifications`
 
-It also inserts sample rows so the app can be tested immediately.
+It also loads the CSV-backed seed rows so the app can be tested immediately.
+
+### CSV Seed Source
+
+The seed data is generated from:
+
+- `C:\Users\gatit\Desktop\CSV FOLDER\users.csv`
+- `C:\Users\gatit\Desktop\CSV FOLDER\vehicles.csv`
+- `C:\Users\gatit\Desktop\CSV FOLDER\compliance_records.csv`
+- `C:\Users\gatit\Desktop\CSV FOLDER\service_records.csv`
+- `C:\Users\gatit\Desktop\CSV FOLDER\notifications.csv`
+
+The generator script is:
+
+- `tools/generate-seeds.ps1`
+
+Run it with:
+
+```bash
+powershell -ExecutionPolicy Bypass -File .\tools\generate-seeds.ps1 -SourceFolder "C:\Users\gatit\Desktop\CSV FOLDER"
+```
 
 ### Useful Commands
 
