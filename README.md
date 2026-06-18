@@ -73,8 +73,8 @@ If the database container is already running and you want to apply the SQL files
 run the schema first and then the seed file:
 
 ```bash
-Get-Content docker\mysql\init\01-schema.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
-Get-Content docker\mysql\init\02-seeds.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
+type docker\mysql\init\01-schema.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
+type docker\mysql\init\02-seeds.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
 ```
 
 ### Verify Load
@@ -84,6 +84,20 @@ Use these commands to confirm the tables and row counts:
 ```bash
 docker exec -it vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance -e "SHOW TABLES;"
 docker exec -it vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance -e "SELECT COUNT(*) AS users_count FROM users; SELECT COUNT(*) AS vehicles_count FROM vehicles; SELECT COUNT(*) AS compliance_count FROM compliance_records; SELECT COUNT(*) AS service_count FROM service_records; SELECT COUNT(*) AS notifications_count FROM notifications;"
+```
+
+### View Tables
+
+To see the table names in Command Prompt:
+
+```cmd
+docker exec -it vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance -e "SHOW TABLES;"
+```
+
+To inspect the seeded data:
+
+```cmd
+docker exec -it vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance -e "SELECT * FROM users; SELECT * FROM vehicles; SELECT * FROM compliance_records; SELECT * FROM service_records; SELECT * FROM notifications;"
 ```
 
 ### CSV Seed Source
