@@ -16,6 +16,21 @@ services:
       db:
         condition: service_healthy
 
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: vehicle-compliance-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: rootpassword
+      PMA_ARBITRARY: 0
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     image: mysql:8.0
     container_name: vehicle-compliance-db
