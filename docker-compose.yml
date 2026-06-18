@@ -1,0 +1,40 @@
+services:
+  app:
+    build: .
+    container_name: vehicle-compliance-app
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+    environment:
+      DB_HOST: db
+      DB_NAME: vehicle_compliance
+      DB_USER: vcs_user
+      DB_PASSWORD: vcs_password
+      DB_CHARSET: utf8mb4
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.0
+    container_name: vehicle-compliance-db
+    restart: unless-stopped
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: vehicle_compliance
+      MYSQL_USER: vcs_user
+      MYSQL_PASSWORD: vcs_password
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  db_data:
