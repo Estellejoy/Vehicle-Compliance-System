@@ -91,12 +91,11 @@ Write-SeedBlock `
     -ExtraValues @{ password_hash = $null }
 
 Write-SeedBlock `
-# plate_number is seeded with the same value as plate_no for compatibility with the current UI.
+
 $vehicleRows = foreach ($row in $vehicles) {
     [pscustomobject]@{
         vehicle_id   = $row.vehicle_id
         owner_id     = $row.owner_id
-        plate_no     = $row.plate_no
         plate_number = $row.plate_no
         make         = $row.make
         model        = $row.model
@@ -106,9 +105,9 @@ $vehicleRows = foreach ($row in $vehicles) {
 
 Write-SeedBlock `
     -Table 'vehicles' `
-    -Columns @('vehicle_id', 'owner_id', 'plate_no', 'plate_number', 'make', 'model', 'year') `
+    -Columns @('vehicle_id', 'owner_id', 'plate_number', 'make', 'model', 'year') `
     -Rows $vehicleRows `
-    -UpdateColumns @('owner_id', 'plate_no', 'plate_number', 'make', 'model', 'year')
+    -UpdateColumns @('owner_id', 'plate_number', 'make', 'model', 'year')
 
 Write-SeedBlock `
     -Table 'compliance_records' `
