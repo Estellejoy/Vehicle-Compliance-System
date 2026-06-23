@@ -4,13 +4,13 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(150) NOT NULL UNIQUE,
     role ENUM('admin', 'officer', 'owner') NOT NULL,
     password_hash VARCHAR(255) NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS vehicles (
     vehicle_id INT AUTO_INCREMENT PRIMARY KEY,
     owner_id INT NOT NULL,
-    plate_no VARCHAR(50) NOT NULL UNIQUE,
     plate_number VARCHAR(50) NOT NULL,
     make VARCHAR(100) NOT NULL,
     model VARCHAR(100) NOT NULL,

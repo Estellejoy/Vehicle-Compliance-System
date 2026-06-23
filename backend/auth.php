@@ -7,19 +7,25 @@ require_once '../config/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['username']);
-    $selected_role = trim($_POST['role']);
+    $password = (string)($_POST['password'] ?? '');
     
     try {
         // 2. Exact match check
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :email AND role = :role LIMIT 1");
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :email AND is_active = 1 LIMIT 1");
         $stmt->execute([
             'email' => $email,
-            'role'  => $selected_role
         ]);
         
         $user = $stmt->fetch();
         
         if ($user) {
+            if (!empty($user['password_hash'])) {
+                if (!password_verify($password, $user['password_hash'])) {
+                    header("Location: /login?error=Invalid email or password.");
+                    exit;
+                }
+            }
+
             // 3. Save details safely to session string variables
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['name'] = $user['name'];
@@ -37,12 +43,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
         } else {
             // Mismatch redirect
-            header("Location: ../views/login.php?error=Invalid email or role selection.");
+            header("Location: /login?error=Invalid credentials or inactive account.");
             exit;
         }
         
     } catch (\PDOException $e) {
-        header("Location: ../views/login.php?error=Database_Error");
+        header("Location: /login?error=Database_Error");
         exit;
     }
 }
