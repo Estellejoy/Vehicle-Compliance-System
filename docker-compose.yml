@@ -4,8 +4,6 @@ services:
     container_name: vehicle-compliance-app
     ports:
       - "8080:80"
-    volumes:
-      - ./:/var/www/html
     environment:
       DB_HOST: db
       DB_NAME: vehicle_compliance
@@ -15,6 +13,27 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ./backend
+          target: /var/www/html/backend
+        - action: sync
+          path: ./config
+          target: /var/www/html/config
+        - action: sync
+          path: ./views
+          target: /var/www/html/views
+        - action: sync
+          path: ./assets
+          target: /var/www/html/assets
+        - action: sync
+          path: ./index.php
+          target: /var/www/html/index.php
+        - action: rebuild
+          path: ./Dockerfile
+        - action: rebuild
+          path: ./docker-compose.yml
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest

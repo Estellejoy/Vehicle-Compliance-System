@@ -31,6 +31,12 @@ This project can run with PHP-Apache and MySQL through Docker Compose.
 docker compose up --build
 ```
 
+For hot reload during development, use Compose Watch if your Docker Compose version supports it:
+
+```bash
+docker compose watch
+```
+
 Open:
 
 - `http://localhost:8080`
@@ -157,3 +163,4 @@ docker compose up --build
 - The MySQL host port is mapped to `3307` to avoid collisions with local MySQL installs.
 - The login backend now loads `config/db.php`, which reads database values from environment variables.
 - The current login flow still checks email + role; password verification has not been implemented yet.
+- The `app` service uses `develop.watch` rules in `docker-compose.yml` for file sync and rebuilds during development.
