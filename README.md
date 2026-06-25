@@ -55,6 +55,11 @@ Default Compose values:
 - Host MySQL port: `3307`
 - phpMyAdmin port: `8081`
 
+Local environment files:
+
+- `.env` contains your machine-specific Compose values and seeded app account details.
+- `.env.example` shows the same keys with placeholder values.
+
 The first database start loads the schema from `docker/mysql/init/01-schema.sql`.
 
 If you already have an existing MySQL volume, apply the inspection migration once:
@@ -134,6 +139,12 @@ Run it with:
 ```bash
 powershell -ExecutionPolicy Bypass -File .\tools\generate-seeds.ps1 -SourceFolder "C:\Users\gatit\Desktop\CSV FOLDER"
 ```
+
+Seeded app account:
+
+- Email: `joy.gatiti@strathmore.edu`
+- Role: `owner`
+- Password: use the value stored in your local `.env`
 
 ### Useful Commands
 

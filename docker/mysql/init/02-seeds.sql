@@ -441,4 +441,13 @@ ON DUPLICATE KEY UPDATE
     status = VALUES(status),
     date_sent = VALUES(date_sent);
 
+INSERT INTO users (user_id, name, email, role, password_hash)
+VALUES
+('54', 'Joy Gatiti', 'joy.gatiti@strathmore.edu', 'owner', '$2y$10$5EqeLRIhb0TxWjCOQLVOreYJ4fzqcn2mE6DcLfwz02wVjaGpg.4uS')
+ON DUPLICATE KEY UPDATE
+    name = VALUES(name),
+    email = VALUES(email),
+    role = VALUES(role),
+    password_hash = VALUES(password_hash);
+
 SET FOREIGN_KEY_CHECKS = 1;
