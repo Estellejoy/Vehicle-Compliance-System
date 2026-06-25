@@ -12,6 +12,8 @@ require_once '../config/db.php';
 
 $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['name'];
+$changePasswordUrl = '/views/change_password.php';
+$logoutUrl = '/backend/logout.php';
 
 // Placeholders for database data arrays
 $vehicles = [];
@@ -76,7 +78,12 @@ try {
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <div class="d-flex align-items-center text-white gap-3">
                     <span class="small"><i class="bi bi-person-circle me-1"></i> <?php echo htmlspecialchars($user_name); ?> (Citizen)</span>
-                    <a href="login.php" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                    <a href="<?php echo htmlspecialchars($changePasswordUrl); ?>" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-key me-1"></i> Change Password
+                    </a>
+                    <a href="<?php echo htmlspecialchars($logoutUrl); ?>" class="btn btn-light btn-sm text-success">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
                 </div>
             </div>
         </div>

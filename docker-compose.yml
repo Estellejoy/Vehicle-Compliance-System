@@ -5,11 +5,20 @@ services:
     ports:
       - "8080:80"
     environment:
+<<<<<<< Updated upstream
       DB_HOST: ${DB_HOST:-db}
       DB_NAME: ${DB_NAME:-vehicle_compliance}
       DB_USER: ${DB_USER:-vcs_user}
       DB_PASSWORD: ${DB_PASSWORD:-vcs_password}
       DB_CHARSET: ${DB_CHARSET:-utf8mb4}
+=======
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: vehicle_compliance
+      DB_USER: vcs_user
+      DB_PASSWORD: vcs_password
+      DB_CHARSET: utf8mb4
+>>>>>>> Stashed changes
     depends_on:
       db:
         condition: service_healthy

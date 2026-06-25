@@ -21,6 +21,14 @@ function ConvertTo-SqlLiteral {
     return "'$escaped'"
 }
 
+function New-PasswordHash {
+    param([string]$PlainText)
+
+    $php = (Get-Command php -ErrorAction Stop).Source
+    $hash = & $php -r 'echo password_hash($argv[1], PASSWORD_DEFAULT);' -- $PlainText
+    return $hash
+}
+
 function New-ValuesClause {
     param(
         [object[]]$Rows,
@@ -83,12 +91,27 @@ $compliance = Import-Csv (Join-Path $SourceFolder 'compliance_records.csv') | So
 $services = Import-Csv (Join-Path $SourceFolder 'service_records.csv') | Sort-Object { [int]$_.service_id }
 $notifications = Import-Csv (Join-Path $SourceFolder 'notifications.csv') | Sort-Object { [int]$_.notification_id }
 
+$users = foreach ($row in $users) {
+    $localPart = ($row.email -split '@')[0]
+    [pscustomobject]@{
+        user_id       = $row.user_id
+        name          = $row.name
+        email         = $row.email
+        role          = $row.role
+        password_hash = New-PasswordHash "$localPart@123"
+    }
+}
+
 Write-SeedBlock `
     -Table 'users' `
     -Columns @('user_id', 'name', 'email', 'role', 'password_hash') `
     -Rows $users `
+<<<<<<< Updated upstream
     -UpdateColumns @('name', 'email', 'role', 'password_hash') `
     -ExtraValues @{ password_hash = $null }
+=======
+    -UpdateColumns @('name', 'email', 'role', 'password_hash')
+>>>>>>> Stashed changes
 
 $vehicleRows = foreach ($row in $vehicles) {
     [pscustomobject]@{

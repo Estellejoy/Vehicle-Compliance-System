@@ -6,7 +6,7 @@ session_start();
 require_once '../config/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['username']);
+    $email = trim((string)($_POST['username'] ?? ''));
     $password = (string)($_POST['password'] ?? '');
     
     try {
@@ -19,12 +19,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch();
         
         if ($user) {
-            if (!empty($user['password_hash'])) {
-                if (!password_verify($password, $user['password_hash'])) {
-                    header("Location: /login?error=Invalid email or password.");
-                    exit;
-                }
+            if (empty($user['password_hash'])) {
+                header("Location: /login?error=Account has no password set. Contact an administrator.");
+                exit;
             }
+
+            if (!password_verify($password, $user['password_hash'])) {
+                header("Location: /login?error=Invalid email or password.");
+                exit;
+            }
+
+            session_regenerate_id(true);
 
             // 3. Save details safely to session string variables
             $_SESSION['user_id'] = $user['user_id'];
