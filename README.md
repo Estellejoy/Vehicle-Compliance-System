@@ -80,6 +80,17 @@ The init schema creates these tables:
 
 It also loads the CSV-backed seed rows so the app can be tested immediately.
 
+Seeded user passwords are generated from each email's local part plus `@123`.
+For example, `brian.mwangi@gmail.com` uses `brian.mwangi@123`.
+
+If you already have a database with `NULL` password hashes, run the backfill script once:
+
+```bash
+php tools/backfill-passwords.php
+```
+
+After logging in, users can open `Change Password` from any dashboard to replace their temporary password with a personal one.
+
 ### Run Schema and Seeds
 
 The recommended way to initialize everything is to start Compose with a fresh MySQL volume:
@@ -179,5 +190,9 @@ docker compose up --build
 
 - The MySQL host port is mapped to `3307` to avoid collisions with local MySQL installs.
 - The login backend now loads `config/db.php`, which reads database values from environment variables.
+<<<<<<< Updated upstream
 - The current login flow still checks email + role; password verification has not been implemented yet.
 - The `app` service uses `develop.watch` rules in `docker-compose.yml` for file sync and rebuilds during development.
+=======
+- The login flow now requires a valid password hash, so `NULL` passwords no longer bypass authentication.
+>>>>>>> Stashed changes

@@ -113,7 +113,10 @@ try {
                 <span class="text-secondary small d-none d-md-inline">
                     <i class="bi bi-person-gear me-1 text-success"></i><?php echo h($_SESSION['name'] ?? 'Admin'); ?>
                 </span>
-                <a href="/login" class="btn btn-outline-success btn-sm">
+                <a href="/views/change_password.php" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-key me-1"></i> Change Password
+                </a>
+                <a href="/backend/logout.php" class="btn btn-success btn-sm">
                     <i class="bi bi-box-arrow-right me-1"></i> Logout
                 </a>
             </div>

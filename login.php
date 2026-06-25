@@ -36,10 +36,11 @@
                             </div>
                         </div>
                         <div class="col-lg-7 bg-white p-4 p-md-5">
-                            <div class="mb-4">
-                                <h2 class="fw-bold text-dark mb-1">Login</h2>
-                                <p class="text-secondary mb-0">Enter the email registered to your account.</p>
-                            </div>
+                                <div class="mb-4">
+                                    <h2 class="fw-bold text-dark mb-1">Login</h2>
+                                    <p class="text-secondary mb-0">Enter the email registered to your account.</p>
+                             
+                                </div>
 
                             <?php if (isset($_GET['error'])): ?>
                                 <div class="alert alert-danger" role="alert">

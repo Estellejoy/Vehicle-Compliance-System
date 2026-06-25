@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     role ENUM('admin', 'officer', 'owner') NOT NULL,
-    password_hash VARCHAR(255) NULL,
+    password_hash VARCHAR(255) NOT NULL,
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
