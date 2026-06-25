@@ -5,11 +5,11 @@ services:
     ports:
       - "8080:80"
     environment:
-      DB_HOST: db
-      DB_NAME: vehicle_compliance
-      DB_USER: vcs_user
-      DB_PASSWORD: vcs_password
-      DB_CHARSET: utf8mb4
+      DB_HOST: ${DB_HOST:-db}
+      DB_NAME: ${DB_NAME:-vehicle_compliance}
+      DB_USER: ${DB_USER:-vcs_user}
+      DB_PASSWORD: ${DB_PASSWORD:-vcs_password}
+      DB_CHARSET: ${DB_CHARSET:-utf8mb4}
     depends_on:
       db:
         condition: service_healthy
@@ -42,10 +42,10 @@ services:
     ports:
       - "8081:80"
     environment:
-      PMA_HOST: db
-      PMA_PORT: 3306
-      MYSQL_ROOT_PASSWORD: rootpassword
-      PMA_ARBITRARY: 0
+      PMA_HOST: ${PMA_HOST:-db}
+      PMA_PORT: ${PMA_PORT:-3306}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      PMA_ARBITRARY: ${PMA_ARBITRARY:-0}
     depends_on:
       db:
         condition: service_healthy
@@ -57,10 +57,10 @@ services:
     ports:
       - "3307:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: vehicle_compliance
-      MYSQL_USER: vcs_user
-      MYSQL_PASSWORD: vcs_password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-vehicle_compliance}
+      MYSQL_USER: ${MYSQL_USER:-vcs_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-vcs_password}
     volumes:
       - db_data:/var/lib/mysql
       - ./docker/mysql/init:/docker-entrypoint-initdb.d
