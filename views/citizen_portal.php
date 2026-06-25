@@ -18,6 +18,21 @@ $vehicles = [];
 $total_vehicles = 0;
 $pending_fines = 0;
 
+function inspectionBadgeClass($status)
+{
+    $normalized = strtolower(trim((string) $status));
+
+    if ($normalized === 'checked') {
+        return 'bg-success-subtle text-success border border-success border-opacity-25';
+    }
+
+    if ($normalized === 'pending police check') {
+        return 'bg-warning-subtle text-warning border border-warning border-opacity-25';
+    }
+
+    return 'bg-secondary-subtle text-secondary border border-secondary border-opacity-25';
+}
+
 try {
     // 3. Fetch real vehicles belonging to this logged-in user ID
     $stmt = $pdo->prepare("SELECT * FROM vehicles WHERE owner_id = :user_id");
@@ -154,9 +169,16 @@ try {
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <span class="badge bg-warning-subtle text-warning border border-warning border-opacity-25 px-2.5 py-1.5 rounded-pill">
-                                                        Pending Renewal
+                                                    <span class="badge <?php echo inspectionBadgeClass($vehicle['inspection_status'] ?? 'Pending Police Check'); ?> px-2.5 py-1.5 rounded-pill">
+                                                        <?php echo htmlspecialchars($vehicle['inspection_status'] ?? 'Pending Police Check'); ?>
                                                     </span>
+                                                    <div class="text-muted small mt-1">
+                                                        <?php if (!empty($vehicle['inspection_checked_at'])): ?>
+                                                            Checked on <?php echo htmlspecialchars($vehicle['inspection_checked_at']); ?>
+                                                        <?php else: ?>
+                                                            Not checked yet
+                                                        <?php endif; ?>
+                                                    </div>
                                                 </td>
                                                 <td class="pe-4 text-end">
                                                     <button class="btn btn-light btn-sm border fw-semibold text-secondary"><i class="bi bi-eye"></i> Details</button>

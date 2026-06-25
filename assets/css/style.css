@@ -216,6 +216,35 @@ body {
     margin-bottom: 0;
 }
 
+@media print {
+    .no-print,
+    .navbar,
+    .section-band.bg-light:first-of-type,
+    .search-card .alert,
+    .dashboard-page .search-card form,
+    .dashboard-page .search-card .d-flex.justify-content-between,
+    .dashboard-page .dashboard-hero,
+    .admin-page .report-hero,
+    .admin-page .search-card .btn,
+    .admin-page .table .btn {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+    }
+
+    .section-band {
+        border-top: 0;
+        page-break-inside: avoid;
+    }
+
+    .officer-dashboard main,
+    .admin-page main {
+        padding: 0;
+    }
+}
+
 @media (max-width: 991.98px) {
     .hero-banner {
         min-height: auto;

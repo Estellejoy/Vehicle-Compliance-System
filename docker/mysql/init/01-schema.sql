@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS vehicles (
     make VARCHAR(100) NOT NULL,
     model VARCHAR(100) NOT NULL,
     year INT NOT NULL,
+    inspection_status VARCHAR(30) NOT NULL DEFAULT 'Pending Police Check',
+    inspection_checked_at DATETIME NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_vehicles_owner
         FOREIGN KEY (owner_id) REFERENCES users(user_id)

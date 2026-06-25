@@ -57,6 +57,12 @@ Default Compose values:
 
 The first database start loads the schema from `docker/mysql/init/01-schema.sql`.
 
+If you already have an existing MySQL volume, apply the inspection migration once:
+
+```cmd
+type docker\mysql\migrations\01_add_vehicle_inspection.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
+```
+
 ### Seeded Tables
 
 The init schema creates these tables:
