@@ -18,19 +18,57 @@ function badgeClass($status)
     return strtolower((string) $status) === 'valid' ? 'bg-success' : 'bg-danger';
 }
 
-$plateNumber = '';
+function inspectionBadgeClass($status)
+{
+    $normalized = strtolower(trim((string) $status));
+
+    if ($normalized === 'checked') {
+        return 'bg-success';
+    }
+
+    if ($normalized === 'pending police check') {
+        return 'bg-warning text-dark';
+    }
+
+    return 'bg-secondary';
+}
+
+$plateNumber = trim($_POST['plate_number'] ?? $_GET['plate_number'] ?? '');
 $vehicle = null;
 $message = null;
 $messageType = 'info';
+$inspectionFeatureEnabled = false;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $plateNumber = trim($_POST['plate_number'] ?? '');
+if (isset($_GET['updated'])) {
+    $message = 'Inspection status updated successfully.';
+    $messageType = 'success';
+}
+
+if (isset($_GET['error']) && $_GET['error'] === 'inspection_columns_missing') {
+    $message = 'This database does not have the inspection columns yet. Run the migration in the README.';
+    $messageType = 'warning';
+}
+
+try {
+    $inspectionStatusColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_status'")->fetch();
+    $inspectionCheckedAtColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_checked_at'")->fetch();
+    $inspectionFeatureEnabled = (bool) $inspectionStatusColumn && (bool) $inspectionCheckedAtColumn;
+} catch (PDOException $e) {
+    error_log($e->getMessage());
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' || $plateNumber !== '') {
 
     if ($plateNumber === '') {
         $message = 'Enter a plate number to look up a record.';
         $messageType = 'warning';
     } else {
         try {
+            $inspectionSelect = $inspectionFeatureEnabled
+                ? "v.inspection_status,
+                    v.inspection_checked_at,"
+                : "";
+
             $stmt = $pdo->prepare(
                 "SELECT
                     v.vehicle_id,
@@ -48,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     c.licence_status,
                     c.registration_expiry,
                     c.registration_status,
+                    $inspectionSelect
                     s.service_details,
                     s.last_service_date,
                     s.next_service_date
@@ -104,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </nav>
 
-    <main>
+    <main class="officer-dashboard">
         <section class="section-band bg-white">
             <div class="container py-5">
                 <div class="row align-items-center g-4">
@@ -217,6 +256,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="fw-semibold"><?php echo h($vehicle['next_service_date'] ?? 'N/A'); ?></div>
                             </div>
                         </div>
+                    </div>
+
+                    <?php if ($inspectionFeatureEnabled): ?>
+                        <div class="detail-card mt-4">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                                <div>
+                                    <div class="small text-secondary text-uppercase fw-semibold">Police inspection</div>
+                                    <h3 class="h4 fw-bold mt-2 mb-0">Update inspection status</h3>
+                                </div>
+                                <span class="badge <?php echo inspectionBadgeClass($vehicle['inspection_status'] ?? 'Pending Police Check'); ?> px-3 py-2">
+                                    <?php echo h($vehicle['inspection_status'] ?? 'Pending Police Check'); ?>
+                                </span>
+                            </div>
+
+                            <div class="row g-3 mt-3 align-items-end">
+                                <div class="col-md-6">
+                                    <div class="small text-secondary">Last checked</div>
+                                    <div class="fw-semibold"><?php echo h($vehicle['inspection_checked_at'] ?? 'Not checked yet'); ?></div>
+                                </div>
+                                <div class="col-md-6 text-md-end">
+                                    <form method="POST" action="../backend/update_record.php" class="d-inline-block no-print">
+                                        <input type="hidden" name="action" value="mark_inspected">
+                                        <input type="hidden" name="vehicle_id" value="<?php echo h($vehicle['vehicle_id']); ?>">
+                                        <input type="hidden" name="plate_number" value="<?php echo h($vehicle['plate_number']); ?>">
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="bi bi-check2-circle me-1"></i> Mark as Checked
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <div class="alert alert-warning mt-4 no-print" role="alert">
+                            The current database is missing the inspection columns. Apply the migration in the README to enable inspection updates.
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="d-flex justify-content-end mt-4 no-print">
+                        <button type="button" class="btn btn-outline-success" onclick="window.print()">
+                            <i class="bi bi-printer me-1"></i> Print Compliance Report
+                        </button>
                     </div>
                 </div>
             </section>

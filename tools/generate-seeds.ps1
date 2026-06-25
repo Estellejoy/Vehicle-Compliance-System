@@ -90,24 +90,24 @@ Write-SeedBlock `
     -UpdateColumns @('name', 'email', 'role', 'password_hash') `
     -ExtraValues @{ password_hash = $null }
 
-Write-SeedBlock `
-
 $vehicleRows = foreach ($row in $vehicles) {
     [pscustomobject]@{
-        vehicle_id   = $row.vehicle_id
-        owner_id     = $row.owner_id
-        plate_number = $row.plate_no
-        make         = $row.make
-        model        = $row.model
-        year         = $row.year
+        vehicle_id           = $row.vehicle_id
+        owner_id             = $row.owner_id
+        plate_number         = $row.plate_no
+        make                 = $row.make
+        model                = $row.model
+        year                 = $row.year
+        inspection_status    = 'Pending Police Check'
+        inspection_checked_at = $null
     }
 }
 
 Write-SeedBlock `
     -Table 'vehicles' `
-    -Columns @('vehicle_id', 'owner_id', 'plate_number', 'make', 'model', 'year') `
+    -Columns @('vehicle_id', 'owner_id', 'plate_number', 'make', 'model', 'year', 'inspection_status', 'inspection_checked_at') `
     -Rows $vehicleRows `
-    -UpdateColumns @('owner_id', 'plate_number', 'make', 'model', 'year')
+    -UpdateColumns @('owner_id', 'plate_number', 'make', 'model', 'year', 'inspection_status', 'inspection_checked_at')
 
 Write-SeedBlock `
     -Table 'compliance_records' `
