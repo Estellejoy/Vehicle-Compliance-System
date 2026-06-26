@@ -54,6 +54,7 @@ Default Compose values:
 - `DB_PASSWORD=vcs_password`
 - Host MySQL port: `3307`
 - phpMyAdmin port: `8081`
+- App timestamps are stored in `Africa/Nairobi` time.
 
 Local environment files:
 
@@ -66,6 +67,12 @@ If you already have an existing MySQL volume, apply the inspection migration onc
 
 ```cmd
 type docker\mysql\migrations\01_add_vehicle_inspection.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
+```
+
+Then apply the inspection audit migration so the system stores who performed the last check:
+
+```cmd
+type docker\mysql\migrations\03_add_vehicle_inspection_checked_by.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
 ```
 
 ### Seeded Tables
@@ -90,6 +97,7 @@ php tools/backfill-passwords.php
 ```
 
 After logging in, users can open `Change Password` from any dashboard to replace their temporary password with a personal one.
+Police inspection updates now record the officer name and the Nairobi-local timestamp of the last check.
 
 ### Run Schema and Seeds
 

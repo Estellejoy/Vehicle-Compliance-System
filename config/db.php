@@ -1,6 +1,8 @@
 <?php
 // config/db.php
 
+date_default_timezone_set('Africa/Nairobi');
+
 $host = getenv('DB_HOST') ?: 'localhost';
 $port = getenv('DB_PORT') ?: '3306';
 $db   = getenv('DB_NAME') ?: 'vehicle_compliance';
