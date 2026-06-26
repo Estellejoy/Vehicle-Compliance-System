@@ -27,7 +27,7 @@ function h($value): string
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Change Password - VCVS</title>
+    <title>Change Password - VCS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="../assets/css/style.css" rel="stylesheet">
@@ -38,7 +38,7 @@ function h($value): string
             <nav class="navbar navbar-expand-lg navbar-light vcs-navbar border-bottom rounded-4 px-3 px-md-4 mb-4 bg-white shadow-sm">
                 <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-success" href="<?php echo h($dashboardUrl); ?>">
                     <span class="brand-mark"><i class="bi bi-shield-check"></i></span>
-                    <span>VCVS</span>
+                    <span>VCS</span>
                 </a>
                 <div class="ms-auto d-flex align-items-center gap-2">
                     <span class="text-secondary small d-none d-md-inline">

@@ -17,10 +17,15 @@ CREATE TABLE IF NOT EXISTS vehicles (
     year INT NOT NULL,
     inspection_status VARCHAR(30) NOT NULL DEFAULT 'Pending Police Check',
     inspection_checked_at DATETIME NULL,
+    inspection_checked_by INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_vehicles_owner
         FOREIGN KEY (owner_id) REFERENCES users(user_id)
         ON DELETE CASCADE
+    ,
+    CONSTRAINT fk_vehicles_inspection_checked_by
+        FOREIGN KEY (inspection_checked_by) REFERENCES users(user_id)
+        ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS compliance_records (

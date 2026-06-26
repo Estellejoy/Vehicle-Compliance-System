@@ -52,7 +52,8 @@ if (isset($_GET['error']) && $_GET['error'] === 'inspection_columns_missing') {
 try {
     $inspectionStatusColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_status'")->fetch();
     $inspectionCheckedAtColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_checked_at'")->fetch();
-    $inspectionFeatureEnabled = (bool) $inspectionStatusColumn && (bool) $inspectionCheckedAtColumn;
+    $inspectionCheckedByColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_checked_by'")->fetch();
+    $inspectionFeatureEnabled = (bool) $inspectionStatusColumn && (bool) $inspectionCheckedAtColumn && (bool) $inspectionCheckedByColumn;
 } catch (PDOException $e) {
     error_log($e->getMessage());
 }
@@ -66,7 +67,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $plateNumber !== '') {
         try {
             $inspectionSelect = $inspectionFeatureEnabled
                 ? "v.inspection_status,
-                    v.inspection_checked_at,"
+                    v.inspection_checked_at,
+                    v.inspection_checked_by,
+                    checker.name AS inspection_checked_by_name,"
+                : "";
+            $inspectionJoin = $inspectionFeatureEnabled
+                ? "LEFT JOIN users checker ON checker.user_id = v.inspection_checked_by"
                 : "";
 
             $stmt = $pdo->prepare(
@@ -94,6 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $plateNumber !== '') {
                 INNER JOIN users u ON u.user_id = v.owner_id
                 LEFT JOIN compliance_records c ON c.vehicle_id = v.vehicle_id
                 LEFT JOIN service_records s ON s.vehicle_id = v.vehicle_id
+                $inspectionJoin
                 WHERE REPLACE(UPPER(v.plate_number), ' ', '') = REPLACE(UPPER(:plate_number), ' ', '')
                 LIMIT 1"
             );
@@ -120,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $plateNumber !== '') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Officer Dashboard - VCVS</title>
+    <title>Officer Dashboard - VCS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="../assets/css/style.css" rel="stylesheet">
@@ -152,9 +159,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $plateNumber !== '') {
                 <div class="row align-items-center g-4">
                     <div class="col-lg-6">
                         <span class="eyebrow text-success fw-semibold">Officer dashboard</span>
-                        <h1 class="section-title mt-2">Search a plate number and pull the vehicle record from the database.</h1>
+                        <h1 class="section-title mt-2">Enforcement Portal</h1>
                         <p class="text-secondary mt-3 mb-0">
-                            Enter the plate number during roadside checks and the system will return the owner details, compliance status, and service history.
+                            Search by Registration Mark / Plate Number
                         </p>
                     </div>
                     <div class="col-lg-6">
@@ -275,9 +282,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $plateNumber !== '') {
 
                             <div class="row g-3 mt-3 align-items-end">
                                 <div class="col-md-6">
-                                    <div class="small text-secondary">Last checked</div>
-                                    <div class="fw-semibold"><?php echo h($vehicle['inspection_checked_at'] ?? 'Not checked yet'); ?></div>
-                                </div>
+                                <div class="small text-secondary">Last checked</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['inspection_checked_at'] ?? 'Not checked yet'); ?></div>
+                                <div class="small text-secondary mt-2">Checked by</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['inspection_checked_by_name'] ?? 'Officer not recorded'); ?></div>
+                            </div>
                                 <div class="col-md-6 text-md-end">
                                     <form method="POST" action="../backend/update_record.php" class="d-inline-block no-print">
                                         <input type="hidden" name="action" value="mark_inspected">

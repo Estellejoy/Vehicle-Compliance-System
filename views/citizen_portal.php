@@ -1,24 +1,23 @@
 <?php
 session_start();
 
-// 1. Security Check: Lock the door if they aren't logged in as an owner
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'owner') {
+if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'owner') {
     header("Location: login.php");
     exit;
 }
 
-// 2. Bring in your database connection 
 require_once '../config/db.php';
 
-$user_id = $_SESSION['user_id'];
-$user_name = $_SESSION['name'];
+$user_id = (int) $_SESSION['user_id'];
+$user_name = $_SESSION['name'] ?? 'Citizen';
 $changePasswordUrl = '/views/change_password.php';
 $logoutUrl = '/backend/logout.php';
 
-// Placeholders for database data arrays
 $vehicles = [];
 $total_vehicles = 0;
-$pending_fines = 0;
+$fully_compliant_vehicles = 0;
+$non_compliant_vehicles = 0;
+$overall_status_label = 'No Vehicles Found';
 
 function inspectionBadgeClass($status)
 {
@@ -36,19 +35,55 @@ function inspectionBadgeClass($status)
 }
 
 try {
-    // 3. Fetch real vehicles belonging to this logged-in user ID
-    $stmt = $pdo->prepare("SELECT * FROM vehicles WHERE owner_id = :user_id");
+    $stmt = $pdo->prepare(
+        "SELECT v.*, checker.name AS inspection_checked_by_name
+         FROM vehicles v
+         LEFT JOIN users checker ON checker.user_id = v.inspection_checked_by
+         WHERE v.owner_id = :user_id
+         ORDER BY v.vehicle_id ASC"
+    );
     $stmt->execute(['user_id' => $user_id]);
     $vehicles = $stmt->fetchAll();
     $total_vehicles = count($vehicles);
-    
-    // (Optional placeholder query example for tracking fines)
-    // $fine_stmt = $pdo->prepare("SELECT SUM(amount) as total FROM fines WHERE owner_id = :user_id AND status = 'unpaid'");
-    // $fine_stmt->execute(['user_id' => $user_id]);
-    // $pending_fines = $fine_stmt->fetch()['total'] ?? 0;
 
+    $complianceStmt = $pdo->prepare(
+        "SELECT
+            SUM(
+                CASE
+                    WHEN c.insurance_status = 'Valid'
+                     AND c.licence_status = 'Valid'
+                     AND c.registration_status = 'Valid'
+                    THEN 1
+                    ELSE 0
+                END
+            ) AS fully_compliant_count,
+            SUM(
+                CASE
+                    WHEN c.vehicle_id IS NULL
+                      OR c.insurance_status <> 'Valid'
+                      OR c.licence_status <> 'Valid'
+                      OR c.registration_status <> 'Valid'
+                    THEN 1
+                    ELSE 0
+                END
+            ) AS non_compliant_count
+        FROM vehicles v
+        LEFT JOIN compliance_records c ON c.vehicle_id = v.vehicle_id
+        WHERE v.owner_id = :user_id"
+    );
+    $complianceStmt->execute(['user_id' => $user_id]);
+    $complianceSummary = $complianceStmt->fetch() ?: [];
+    $fully_compliant_vehicles = (int) ($complianceSummary['fully_compliant_count'] ?? 0);
+    $non_compliant_vehicles = (int) ($complianceSummary['non_compliant_count'] ?? 0);
+
+    if ($total_vehicles === 0) {
+        $overall_status_label = 'No Vehicles Found';
+    } elseif ($non_compliant_vehicles > 0) {
+        $overall_status_label = 'Action Required';
+    } else {
+        $overall_status_label = 'Fully Compliant';
+    }
 } catch (\PDOException $e) {
-    // Graceful fallback if your database tables are still being structured
     $vehicles = [];
 }
 ?>
@@ -90,7 +125,6 @@ try {
     </nav>
 
     <div class="container my-5">
-        
         <div class="row mb-4">
             <div class="col-12">
                 <div class="p-4 bg-white shadow-sm rounded-3 border-start border-success border-4">
@@ -121,8 +155,16 @@ try {
                         <div>
                             <span class="text-muted text-uppercase small fw-bold">Overall Status</span>
                             <h3 class="h4 fw-bold text-info mb-0 mt-2">
-                                <?php echo ($pending_fines > 0) ? 'Action Required' : 'Fully Compliant ✅'; ?>
+                                <?php echo htmlspecialchars($overall_status_label); ?>
+                                <?php if ($overall_status_label === 'Fully Compliant'): ?>✅<?php endif; ?>
                             </h3>
+                            <div class="small text-secondary mt-2">
+                                <?php if ($total_vehicles > 0): ?>
+                                    <?php echo $fully_compliant_vehicles; ?> compliant, <?php echo $non_compliant_vehicles; ?> need attention
+                                <?php else: ?>
+                                    No registered vehicles
+                                <?php endif; ?>
+                            </div>
                         </div>
                         <div class="bg-info bg-opacity-10 p-3 rounded-3 text-info fs-3">
                             <i class="bi bi-shield-check"></i>
@@ -135,8 +177,8 @@ try {
                 <div class="card fine-card shadow-sm p-3 bg-white h-100">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <span class="text-muted text-uppercase small fw-bold">Unpaid Penalties</span>
-                            <h3 class="display-6 fw-bold text-danger mb-0 mt-1">KES <?php echo number_format($pending_fines); ?></h3>
+                            <span class="text-muted text-uppercase small fw-bold">Non-compliant Vehicles</span>
+                            <h3 class="display-6 fw-bold text-danger mb-0 mt-1"><?php echo $non_compliant_vehicles; ?></h3>
                         </div>
                         <div class="bg-danger bg-opacity-10 p-3 rounded-3 text-danger fs-3">
                             <i class="bi bi-exclamation-octagon"></i>
@@ -186,9 +228,19 @@ try {
                                                             Not checked yet
                                                         <?php endif; ?>
                                                     </div>
+                                                    <?php if (!empty($vehicle['inspection_checked_by_name'])): ?>
+                                                        <div class="text-muted small">
+                                                            By <?php echo htmlspecialchars($vehicle['inspection_checked_by_name']); ?>
+                                                        </div>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td class="pe-4 text-end">
-                                                    <button class="btn btn-light btn-sm border fw-semibold text-secondary"><i class="bi bi-eye"></i> Details</button>
+                                                    <a
+                                                        class="btn btn-light btn-sm border fw-semibold text-secondary"
+                                                        href="/views/citizen_vehicle_details.php?vehicle_id=<?php echo urlencode((string) $vehicle['vehicle_id']); ?>"
+                                                    >
+                                                        <i class="bi bi-eye"></i> Details
+                                                    </a>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -206,7 +258,6 @@ try {
                 </div>
             </div>
         </div>
-
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
