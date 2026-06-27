@@ -96,6 +96,12 @@ It also loads the CSV-backed seed rows so the app can be tested immediately.
 Seeded user passwords are generated from each email's local part plus `@123`.
 For example, `brian.mwangi@gmail.com` uses `brian.mwangi@123`.
 
+Default login passwords:
+
+- Seeded owner and officer accounts use `<email-local-part>@123`.
+- The seeded app account `joy.gatiti@strathmore.edu` uses the password in your local `.env` file.
+- New registrations use the password entered during signup after email verification.
+
 If you already have a database with `NULL` password hashes, run the backfill script once:
 
 ```bash
