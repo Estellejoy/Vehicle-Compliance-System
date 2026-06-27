@@ -10,8 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = (string)($_POST['password'] ?? '');
     
     try {
-        // 2. Exact match check
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :email AND is_active = 1 LIMIT 1");
+        // 2. Load the account first so we can distinguish verification and password errors
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :email LIMIT 1");
         $stmt->execute([
             'email' => $email,
         ]);
@@ -21,6 +21,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($user) {
             if (empty($user['password_hash'])) {
                 header("Location: /login?error=Account has no password set. Contact an administrator.");
+                exit;
+            }
+
+            if ((int)($user['is_active'] ?? 0) !== 1) {
+                if (empty($user['email_verified_at'])) {
+                    header("Location: /login?error=Please verify your email before logging in.");
+                } else {
+                    header("Location: /login?error=Account is inactive. Contact an administrator.");
+                }
                 exit;
             }
 

@@ -31,16 +31,21 @@ This project can run with PHP-Apache and MySQL through Docker Compose.
 docker compose up --build
 ```
 
-For hot reload during development, use Compose Watch if your Docker Compose version supports it:
-
-```bash
-docker compose watch
-```
+For everyday development, the `app` service bind-mounts the repository into the container,
+so PHP, view, and asset changes are picked up immediately without rebuilding the image.
 
 Open:
 
 - `http://localhost:8080`
 - `http://localhost:8081` for phpMyAdmin
+
+Registration:
+
+- Open `http://localhost:8080/register`
+- Register as a vehicle owner
+- Check your email for the verification link
+- If local mail is not configured, the page will show a clickable verification link
+- After verification, log in at `http://localhost:8080/login`
 
 ## Database Setup
 
@@ -60,6 +65,7 @@ Local environment files:
 
 - `.env` contains your machine-specific Compose values and seeded app account details.
 - `.env.example` shows the same keys with placeholder values.
+- `APP_URL`, `MAIL_FROM_ADDRESS`, and `MAIL_FROM_NAME` support the registration email flow.
 
 The first database start loads the schema from `docker/mysql/init/01-schema.sql`.
 
@@ -198,9 +204,5 @@ docker compose up --build
 
 - The MySQL host port is mapped to `3307` to avoid collisions with local MySQL installs.
 - The login backend now loads `config/db.php`, which reads database values from environment variables.
-<<<<<<< Updated upstream
-- The current login flow still checks email + role; password verification has not been implemented yet.
-- The `app` service uses `develop.watch` rules in `docker-compose.yml` for file sync and rebuilds during development.
-=======
-- The login flow now requires a valid password hash, so `NULL` passwords no longer bypass authentication.
->>>>>>> Stashed changes
+- The login flow now verifies email/password and requires account activation.
+- The `app` service bind-mounts the repository in `docker-compose.yml`, so code changes appear in the running container immediately.
