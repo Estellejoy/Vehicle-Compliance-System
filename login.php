@@ -69,6 +69,11 @@
                                     <i class="bi bi-box-arrow-in-right me-2"></i> Login 
                                 </button>
                             </form>
+
+                            <div class="text-center mt-4">
+                                <span class="text-secondary">Need an account?</span>
+                                <a href="/register" class="link-success fw-semibold text-decoration-none">Register</a>
+                            </div>
                         </div>
                     </div>
                 </div>

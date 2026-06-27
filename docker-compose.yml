@@ -4,45 +4,21 @@ services:
     container_name: vehicle-compliance-app
     ports:
       - "8080:80"
+    volumes:
+      - ./:/var/www/html
     environment:
-<<<<<<< Updated upstream
       DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-3306}
       DB_NAME: ${DB_NAME:-vehicle_compliance}
       DB_USER: ${DB_USER:-vcs_user}
       DB_PASSWORD: ${DB_PASSWORD:-vcs_password}
       DB_CHARSET: ${DB_CHARSET:-utf8mb4}
-=======
-      DB_HOST: db
-      DB_PORT: 3306
-      DB_NAME: vehicle_compliance
-      DB_USER: vcs_user
-      DB_PASSWORD: vcs_password
-      DB_CHARSET: utf8mb4
->>>>>>> Stashed changes
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-no-reply@localhost}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Vehicle Compliance System}
     depends_on:
       db:
         condition: service_healthy
-    develop:
-      watch:
-        - action: sync
-          path: ./backend
-          target: /var/www/html/backend
-        - action: sync
-          path: ./config
-          target: /var/www/html/config
-        - action: sync
-          path: ./views
-          target: /var/www/html/views
-        - action: sync
-          path: ./assets
-          target: /var/www/html/assets
-        - action: sync
-          path: ./index.php
-          target: /var/www/html/index.php
-        - action: rebuild
-          path: ./Dockerfile
-        - action: rebuild
-          path: ./docker-compose.yml
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
@@ -58,6 +34,14 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: vehicle-compliance-mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+      - "1025:1025"
 
   db:
     image: mysql:8.0
