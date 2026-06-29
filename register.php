@@ -85,12 +85,13 @@ unset($_SESSION['register_flash']);
 
                                 <div class="mb-3">
                                     <label for="password" class="form-label fw-semibold text-secondary">Password</label>
-                                    <input type="password" id="password" name="password" class="form-control form-control-lg" placeholder="Create a password" required>
+                                    <input type="password" id="password" name="password" class="form-control form-control-lg" placeholder="Create a password" minlength="10" required>
+                                    <div class="form-text">Use 10+ characters with upper, lower, number, and special characters.</div>
                                 </div>
 
                                 <div class="mb-4">
                                     <label for="confirm_password" class="form-label fw-semibold text-secondary">Confirm Password</label>
-                                    <input type="password" id="confirm_password" name="confirm_password" class="form-control form-control-lg" placeholder="Repeat password" required>
+                                    <input type="password" id="confirm_password" name="confirm_password" class="form-control form-control-lg" placeholder="Repeat password" minlength="10" required>
                                 </div>
 
                                 <button type="submit" class="btn btn-success btn-lg w-100 fw-semibold">

@@ -77,12 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $plateNumber !== '') {
 
             $stmt = $pdo->prepare(
                 "SELECT
-                    v.vehicle_id,
-                    v.owner_id,
-                    v.plate_number,
-                    v.make,
-                    v.model,
-                    v.year,
+                    v.*,
                     u.name AS owner_name,
                     u.email AS owner_email,
                     u.role AS owner_role,
@@ -93,9 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $plateNumber !== '') {
                     c.registration_expiry,
                     c.registration_status,
                     $inspectionSelect
-                    s.service_details,
-                    s.last_service_date,
-                    s.next_service_date
+                    s.*
                 FROM vehicles v
                 INNER JOIN users u ON u.user_id = v.owner_id
                 LEFT JOIN compliance_records c ON c.vehicle_id = v.vehicle_id
@@ -226,6 +219,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $plateNumber !== '') {
                                 <h3 class="h4 fw-bold mt-2 mb-1"><?php echo h($vehicle['plate_number']); ?></h3>
                                 <p class="text-secondary mb-0"><?php echo h($vehicle['make']); ?> <?php echo h($vehicle['model']); ?></p>
                                 <hr>
+                                <div class="small text-secondary">VIN / Chassis</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['chassis_number'] ?? 'N/A'); ?></div>
+                                <div class="small text-secondary mt-3">Licence class</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['driver_licence_class'] ?? 'N/A'); ?></div>
                                 <div class="small text-secondary">Year</div>
                                 <div class="fw-semibold"><?php echo h($vehicle['year']); ?></div>
                             </div>
@@ -251,6 +248,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $plateNumber !== '') {
                                     <span class="badge <?php echo badgeClass($vehicle['registration_status']); ?> px-3 py-2">Registration: <?php echo h($vehicle['registration_status']); ?></span>
                                 </div>
                                 <hr>
+                                <div class="small text-secondary">Insurance type</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['insurance_type'] ?? 'N/A'); ?></div>
+                                <div class="small text-secondary mt-3">Payment period</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['payment_period'] ?? 'N/A'); ?></div>
                                 <div class="small text-secondary">Compliance record</div>
                                 <div class="fw-semibold">Vehicle ID <?php echo h($vehicle['vehicle_id']); ?></div>
                             </div>
@@ -262,7 +263,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $plateNumber !== '') {
                                 <h3 class="h5 fw-bold mt-2 mb-1"><?php echo h($vehicle['service_details'] ?? 'N/A'); ?></h3>
                                 <p class="text-secondary mb-0">Last service: <?php echo h($vehicle['last_service_date'] ?? 'N/A'); ?></p>
                                 <hr>
-                                <div class="small text-secondary">Next service</div>
+                                <div class="small text-secondary">Next probable service</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['next_probable_service_km'] ?? 'N/A'); ?> km</div>
+                                <div class="small text-secondary mt-3">Interval</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['service_interval_km'] ?? 'N/A'); ?> km</div>
+                                <div class="small text-secondary mt-3">Next service date</div>
                                 <div class="fw-semibold"><?php echo h($vehicle['next_service_date'] ?? 'N/A'); ?></div>
                             </div>
                         </div>

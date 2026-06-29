@@ -2,6 +2,7 @@
 session_start();
 
 require_once '../config/db.php';
+require_once __DIR__ . '/auth_helpers.php';
 
 function flash_register(array $payload): void
 {
@@ -41,10 +42,10 @@ if ($password !== $confirmPassword) {
     ]);
 }
 
-if (strlen($password) < 8) {
+foreach (vcs_validate_password_strength($password) as $passwordError) {
     flash_register([
         'type' => 'danger',
-        'message' => 'Password must be at least 8 characters long.',
+        'message' => $passwordError,
     ]);
 }
 
@@ -91,6 +92,18 @@ try {
         'token_hash' => $tokenHash,
         'token_expires_at' => $tokenExpiresAt,
     ]);
+
+    if (vcs_has_table($pdo, 'user_roles')) {
+        $rolesInsert = $pdo->prepare(
+            'INSERT INTO user_roles (user_id, role, is_primary)
+             VALUES (:user_id, :role, 1)
+             ON DUPLICATE KEY UPDATE is_primary = VALUES(is_primary)'
+        );
+        $rolesInsert->execute([
+            'user_id' => (int) $pdo->lastInsertId(),
+            'role' => 'owner',
+        ]);
+    }
 
     $appUrl = rtrim(getenv('APP_URL') ?: 'http://localhost:8080', '/');
     $verifyLink = $appUrl . '/verify.php?token=' . urlencode($token);

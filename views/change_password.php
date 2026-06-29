@@ -70,7 +70,7 @@ function h($value): string
                                         <div class="display-6"><i class="bi bi-key-fill"></i></div>
                                         <div>
                                             <div class="fw-semibold">Password tips</div>
-                                            <div class="small opacity-75">Use 8+ characters and avoid reusing your old password.</div>
+                                            <div class="small opacity-75">Use 10+ characters with upper, lower, number, and special characters.</div>
                                         </div>
                                     </div>
                                 </div>
@@ -101,7 +101,7 @@ function h($value): string
                                     <label for="new_password" class="form-label fw-semibold text-secondary">New Password</label>
                                     <div class="input-group input-group-lg">
                                         <span class="input-group-text bg-white"><i class="bi bi-shield-lock text-success"></i></span>
-                                        <input type="password" id="new_password" name="new_password" class="form-control" placeholder="New password" minlength="8" required>
+                                        <input type="password" id="new_password" name="new_password" class="form-control" placeholder="New password" minlength="10" required>
                                     </div>
                                 </div>
 
@@ -109,7 +109,7 @@ function h($value): string
                                     <label for="confirm_password" class="form-label fw-semibold text-secondary">Confirm New Password</label>
                                     <div class="input-group input-group-lg">
                                         <span class="input-group-text bg-white"><i class="bi bi-shield-check text-success"></i></span>
-                                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Confirm new password" minlength="8" required>
+                                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Confirm new password" minlength="10" required>
                                     </div>
                                 </div>
 

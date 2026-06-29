@@ -10,12 +10,18 @@
 }
 
 html {
+    font-size: clamp(16px, 0.8vw + 13px, 18px);
+}
+
+html {
     scroll-behavior: smooth;
 }
 
 body {
     background: var(--vcs-surface);
     color: var(--vcs-ink);
+    font-size: 1rem;
+    line-height: 1.55;
 }
 
 .vcs-navbar {
@@ -184,7 +190,29 @@ body {
 }
 
 .login-art img {
+    display: block;
+    width: 100%;
+    height: clamp(240px, 28vw, 340px);
+    object-fit: cover;
     border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.login-page .login-art {
+    width: 100%;
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 360px;
+}
+
+.login-page .login-art img {
+    margin: 0 auto;
+    height: clamp(320px, 36vw, 480px);
+}
+
+.login-page .login-panel {
+    justify-content: flex-start;
 }
 
 .dashboard-page .dashboard-hero img {
@@ -256,6 +284,18 @@ body {
 
     .login-panel {
         min-height: 340px;
+    }
+
+    .login-art img {
+        height: 260px;
+    }
+
+    .login-page .login-art img {
+        height: 280px;
+    }
+
+    .login-page .login-art {
+        min-height: 280px;
     }
 
     .dashboard-page .dashboard-hero img {

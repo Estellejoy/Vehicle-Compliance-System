@@ -7,6 +7,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once '../config/db.php';
+require_once __DIR__ . '/auth_helpers.php';
 
 $userId = (int) $_SESSION['user_id'];
 $currentPassword = (string) ($_POST['current_password'] ?? '');
@@ -39,8 +40,8 @@ if ($newPassword !== $confirmPassword) {
     redirectBack();
 }
 
-if (strlen($newPassword) < 8) {
-    setFlash('warning', 'Use at least 8 characters for the new password.');
+if ($strengthErrors = vcs_validate_password_strength($newPassword)) {
+    setFlash('warning', $strengthErrors[0]);
     redirectBack();
 }
 

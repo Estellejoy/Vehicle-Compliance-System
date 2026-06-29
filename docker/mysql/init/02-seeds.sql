@@ -62,6 +62,15 @@ ON DUPLICATE KEY UPDATE
     role = VALUES(role),
     password_hash = VALUES(password_hash);
 
+INSERT INTO user_roles (user_id, role, is_primary)
+SELECT user_id, role, 1
+FROM users
+ON DUPLICATE KEY UPDATE
+    is_primary = VALUES(is_primary);
+
+INSERT IGNORE INTO user_roles (user_id, role, is_primary)
+VALUES ('54', 'officer', 0);
+
 INSERT INTO vehicles (vehicle_id, owner_id, plate_number, make, model, year, inspection_status, inspection_checked_at)
 VALUES
 ('1', '1', 'KDB 101D', 'Toyota', 'Premio', '2016', 'Pending Police Check', NULL),
@@ -172,6 +181,19 @@ ON DUPLICATE KEY UPDATE
     year = VALUES(year),
     inspection_status = VALUES(inspection_status),
     inspection_checked_at = VALUES(inspection_checked_at);
+
+UPDATE vehicles
+SET chassis_number = COALESCE(chassis_number, CONCAT('VIN', LPAD(vehicle_id, 11, '0'))),
+    insurance_type = COALESCE(insurance_type, CASE WHEN MOD(vehicle_id, 2) = 0 THEN 'Comprehensive' ELSE 'Third Party' END),
+    payment_period = COALESCE(payment_period, 'Annual'),
+    driver_licence_class = COALESCE(driver_licence_class, CASE WHEN year >= 2020 THEN 'B' ELSE 'C1' END),
+    odometer_km = COALESCE(odometer_km, 42000 + (vehicle_id * 850)),
+    service_interval_km = COALESCE(service_interval_km, 5000),
+    next_probable_service_km = COALESCE(next_probable_service_km, COALESCE(odometer_km, 42000 + (vehicle_id * 850)) + COALESCE(service_interval_km, 5000));
+
+INSERT IGNORE INTO vehicle_owners (vehicle_id, user_id, ownership_role, is_primary)
+VALUES ('1', '2', 'Co-owner', 0),
+       ('54', '4', 'Co-owner', 0);
 
 INSERT INTO compliance_records (compliance_id, vehicle_id, insurance_expiry, insurance_status, licence_expiry, licence_status, registration_expiry, registration_status)
 VALUES
@@ -391,6 +413,12 @@ ON DUPLICATE KEY UPDATE
     service_details = VALUES(service_details),
     last_service_date = VALUES(last_service_date),
     next_service_date = VALUES(next_service_date);
+
+UPDATE service_records
+SET service_notes = COALESCE(service_notes, CONCAT(service_details, ': oil, filters, brakes, tyres, fluids, lights, and diagnostics.')),
+    last_service_odometer_km = COALESCE(last_service_odometer_km, 40000 + (service_id * 900)),
+    next_service_odometer_km = COALESCE(next_service_odometer_km, COALESCE(last_service_odometer_km, 40000 + (service_id * 900)) + COALESCE(service_interval_km, 5000)),
+    service_interval_km = COALESCE(service_interval_km, 5000);
 
 INSERT INTO notifications (notification_id, user_id, notification_type, message, status, date_sent)
 VALUES

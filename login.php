@@ -1,3 +1,13 @@
+<?php
+session_start();
+
+$flash = $_SESSION['flash_message'] ?? null;
+$flashType = $_SESSION['flash_type'] ?? null;
+unset($_SESSION['flash_message'], $_SESSION['flash_type']);
+
+require_once __DIR__ . '/backend/auth_helpers.php';
+$supportedRoles = vcs_supported_roles();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,6 +52,12 @@
                              
                                 </div>
 
+                            <?php if ($flash): ?>
+                                <div class="alert alert-<?php echo htmlspecialchars($flashType ?? 'info'); ?>" role="alert">
+                                    <?php echo htmlspecialchars($flash); ?>
+                                </div>
+                            <?php endif; ?>
+
                             <?php if (isset($_GET['error'])): ?>
                                 <div class="alert alert-danger" role="alert">
                                     <?php echo htmlspecialchars($_GET['error']); ?>
@@ -65,12 +81,26 @@
                                     </div>
                                 </div>
 
+                                <div class="mb-4">
+                                    <label for="role" class="form-label fw-semibold text-secondary">Sign in as</label>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text bg-white"><i class="bi bi-person-badge text-success"></i></span>
+                                        <select id="role" name="role" class="form-select">
+                                            <?php foreach ($supportedRoles as $value => $label): ?>
+                                                <option value="<?php echo htmlspecialchars($value); ?>"><?php echo htmlspecialchars($label); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="form-text">Choose the role you want to access for this session.</div>
+                                </div>
+
                                 <button type="submit" class="btn btn-success btn-lg w-100 fw-semibold">
                                     <i class="bi bi-box-arrow-in-right me-2"></i> Login 
                                 </button>
                             </form>
 
-                            <div class="text-center mt-4">
+                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 mt-4">
+                                <a href="/forgot-password" class="link-success fw-semibold text-decoration-none">Forgot Password?</a>
                                 <span class="text-secondary">Need an account?</span>
                                 <a href="/register" class="link-success fw-semibold text-decoration-none">Register</a>
                             </div>

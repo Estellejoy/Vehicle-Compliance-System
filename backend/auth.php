@@ -4,10 +4,12 @@ session_start();
 
 // 1. Import database connection
 require_once '../config/db.php';
+require_once __DIR__ . '/auth_helpers.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim((string)($_POST['username'] ?? ''));
     $password = (string)($_POST['password'] ?? '');
+    $selectedRole = vcs_normalize_role($_POST['role'] ?? '');
     
     try {
         // 2. Load the account first so we can distinguish verification and password errors
@@ -54,21 +56,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            session_regenerate_id(true);
+            $availableRoles = vcs_available_roles_for_user($pdo, $user);
+
+            if (!$availableRoles) {
+                $availableRoles = [vcs_normalize_role($user['role'] ?? 'owner')];
+            }
+
+            if (count($availableRoles) === 1) {
+                $selectedRole = $availableRoles[0];
+            } elseif ($selectedRole === '') {
+                $query = http_build_query([
+                    'error' => 'Choose the role you want to use for this account.',
+                ]);
+                header("Location: /login?{$query}");
+                exit;
+            }
+
+            if (!in_array($selectedRole, $availableRoles, true)) {
+                header("Location: /login?error=That role is not assigned to this email address.");
+                exit;
+            }
 
             // 3. Save details safely to session string variables
-            $_SESSION['user_id'] = $user['user_id'];
-            $_SESSION['name'] = $user['name'];
-            $_SESSION['role'] = $user['role']; 
+            vcs_store_auth_session($user, $selectedRole, $availableRoles);
             
             // 4. Redirect smoothly based on role
-            if ($user['role'] === 'admin') {
-                header("Location: ../views/admin_panel.php");
-            } elseif ($user['role'] === 'officer') {
-                header("Location: ../views/officer_dashboard.php");
-            } else {
-                header("Location: ../views/citizen_portal.php");
-            }
+            header('Location: ' . vcs_dashboard_url_for_role($selectedRole));
             exit;
             
         } else {

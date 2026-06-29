@@ -3,3 +3,5 @@ RewriteEngine On
 RewriteRule ^login/?$ login.php [L,QSA]
 RewriteRule ^register/?$ register.php [L,QSA]
 RewriteRule ^verify/?$ verify.php [L,QSA]
+RewriteRule ^forgot-password/?$ forgot_password.php [L,QSA]
+RewriteRule ^reset-password/?$ reset_password.php [L,QSA]

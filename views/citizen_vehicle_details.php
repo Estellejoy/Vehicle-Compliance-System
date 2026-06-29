@@ -7,6 +7,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'owner') {
 }
 
 require_once '../config/db.php';
+require_once __DIR__ . '/../backend/auth_helpers.php';
 
 function h($value): string
 {
@@ -31,6 +32,7 @@ function inspectionBadgeClass($status): string
 $userId = (int) $_SESSION['user_id'];
 $vehicleId = (int) ($_GET['vehicle_id'] ?? 0);
 $vehicle = null;
+$coOwners = [];
 $message = null;
 $messageType = 'info';
 
@@ -47,25 +49,16 @@ if ($vehicleId <= 0) {
                 u.name AS owner_name,
                 u.email AS owner_email,
                 u.role AS owner_role,
-                v.vehicle_id,
-                v.plate_number,
-                v.make,
-                v.model,
-                v.year,
-                v.inspection_status,
-                v.inspection_checked_at,
-                v.inspection_checked_by,
-                checker.name AS inspection_checked_by_name,
+                v.*,
                 v.created_at AS vehicle_created_at,
+                checker.name AS inspection_checked_by_name,
                 c.insurance_expiry,
                 c.insurance_status,
                 c.licence_expiry,
                 c.licence_status,
                 c.registration_expiry,
                 c.registration_status,
-                s.service_details,
-                s.last_service_date,
-                s.next_service_date
+                s.*
             FROM vehicles v
             INNER JOIN users u ON u.user_id = v.owner_id
             LEFT JOIN compliance_records c ON c.vehicle_id = v.vehicle_id
@@ -84,6 +77,16 @@ if ($vehicleId <= 0) {
         if (!$vehicle) {
             $message = 'That vehicle does not belong to your account or could not be found.';
             $messageType = 'warning';
+        } elseif (vcs_has_table($pdo, 'vehicle_owners')) {
+            $ownersStmt = $pdo->prepare(
+                'SELECT u.name, u.email, vo.ownership_role, vo.is_primary
+                 FROM vehicle_owners vo
+                 INNER JOIN users u ON u.user_id = vo.user_id
+                 WHERE vo.vehicle_id = :vehicle_id
+                 ORDER BY vo.is_primary DESC, u.name ASC'
+            );
+            $ownersStmt->execute(['vehicle_id' => $vehicleId]);
+            $coOwners = $ownersStmt->fetchAll();
         }
     } catch (PDOException $e) {
         error_log($e->getMessage());
@@ -148,22 +151,43 @@ if ($vehicleId <= 0) {
 
                 <?php if ($vehicle): ?>
                     <div class="row g-4">
-                        <div class="col-lg-4">
+                        <div class="col-lg-6">
                             <div class="detail-card h-100 shadow-sm">
                                 <div class="small text-secondary text-uppercase fw-semibold">Vehicle</div>
                                 <h2 class="h3 fw-bold mt-2 mb-1"><?php echo h($vehicle['plate_number']); ?></h2>
                                 <p class="text-secondary mb-0"><?php echo h($vehicle['make']); ?> <?php echo h($vehicle['model']); ?></p>
                                 <hr>
-                                <div class="small text-secondary">Year</div>
+                                <div class="small text-secondary">Chassis / VIN</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['chassis_number'] ?? 'N/A'); ?></div>
+                                <div class="small text-secondary mt-3">Year</div>
                                 <div class="fw-semibold"><?php echo h($vehicle['year']); ?></div>
                                 <div class="small text-secondary mt-3">Vehicle ID</div>
                                 <div class="fw-semibold"><?php echo h($vehicle['vehicle_id']); ?></div>
                                 <div class="small text-secondary mt-3">Added to system</div>
                                 <div class="fw-semibold"><?php echo h($vehicle['vehicle_created_at']); ?></div>
+                                <div class="small text-secondary mt-3">Ownership</div>
+                                <div class="fw-semibold">
+                                    <?php echo h($vehicle['owner_name']); ?>
+                                    <?php if (!empty($coOwners)): ?>
+                                        <span class="text-secondary small d-block">Joint ownership enabled</span>
+                                    <?php endif; ?>
+                                </div>
+                                <?php if (!empty($coOwners)): ?>
+                                    <div class="mt-3 small text-secondary text-uppercase fw-semibold">Co-owners</div>
+                                    <div class="d-grid gap-2 mt-2">
+                                        <?php foreach ($coOwners as $coOwner): ?>
+                                            <div class="border rounded-3 p-2 bg-light">
+                                                <div class="fw-semibold"><?php echo h($coOwner['name']); ?></div>
+                                                <div class="small text-secondary"><?php echo h($coOwner['email']); ?></div>
+                                                <div class="small text-secondary text-capitalize"><?php echo h($coOwner['ownership_role']); ?></div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
 
-                        <div class="col-lg-4">
+                        <div class="col-lg-6">
                             <div class="detail-card h-100 shadow-sm">
                                 <div class="small text-secondary text-uppercase fw-semibold">Compliance</div>
                                 <div class="mt-2 d-grid gap-2">
@@ -172,8 +196,14 @@ if ($vehicleId <= 0) {
                                     <span class="badge bg-success px-3 py-2 text-start">Registration: <?php echo h($vehicle['registration_status'] ?? 'N/A'); ?></span>
                                 </div>
                                 <hr>
+                                <div class="small text-secondary">Insurance type</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['insurance_type'] ?? 'N/A'); ?></div>
+                                <div class="small text-secondary mt-3">Payment period</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['payment_period'] ?? 'N/A'); ?></div>
                                 <div class="small text-secondary">Insurance expiry</div>
                                 <div class="fw-semibold"><?php echo h($vehicle['insurance_expiry'] ?? 'N/A'); ?></div>
+                                <div class="small text-secondary mt-3">Driver's licence class</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['driver_licence_class'] ?? 'N/A'); ?></div>
                                 <div class="small text-secondary mt-3">Licence expiry</div>
                                 <div class="fw-semibold"><?php echo h($vehicle['licence_expiry'] ?? 'N/A'); ?></div>
                                 <div class="small text-secondary mt-3">Registration expiry</div>
@@ -181,7 +211,25 @@ if ($vehicleId <= 0) {
                             </div>
                         </div>
 
-                        <div class="col-lg-4">
+                        <div class="col-lg-6">
+                            <div class="detail-card h-100 shadow-sm">
+                                <div class="small text-secondary text-uppercase fw-semibold">Service planning</div>
+                                <div class="fw-semibold mt-2">Next probable service</div>
+                                <div class="h4 text-success fw-bold mb-0"><?php echo h($vehicle['next_probable_service_km'] ?? 'N/A'); ?> km</div>
+                                <div class="small text-secondary mt-2">Based on a <?php echo h($vehicle['service_interval_km'] ?? 'N/A'); ?> km interval.</div>
+                                <hr>
+                                <div class="small text-secondary">Current odometer</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['odometer_km'] ?? 'N/A'); ?> km</div>
+                                <div class="small text-secondary mt-3">Latest service record</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['service_details'] ?? 'N/A'); ?></div>
+                                <div class="small text-secondary mt-3">Last service odometer</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['last_service_odometer_km'] ?? 'N/A'); ?> km</div>
+                                <div class="small text-secondary mt-3">Service notes</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['service_notes'] ?? 'Oil, filters, brakes, tyres, fluids, lights, and diagnostics.'); ?></div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
                             <div class="detail-card h-100 shadow-sm">
                                 <div class="small text-secondary text-uppercase fw-semibold">Inspection and service</div>
                                 <div class="mt-2">
@@ -194,15 +242,10 @@ if ($vehicleId <= 0) {
                                 <div class="small text-secondary mt-3">Checked by</div>
                                 <div class="fw-semibold"><?php echo h($vehicle['inspection_checked_by_name'] ?? 'Officer not recorded'); ?></div>
                                 <hr>
-                                <div class="small text-secondary text-uppercase fw-semibold">Latest service</div>
-                                <div class="fw-semibold mt-2"><?php echo h($vehicle['service_details'] ?? 'N/A'); ?></div>
-                                <div class="small text-secondary mt-3">Last service date</div>
-                                <div class="fw-semibold"><?php echo h($vehicle['last_service_date'] ?? 'N/A'); ?></div>
-                                <div class="small text-secondary mt-3">Next service date</div>
+                                <div class="small text-secondary text-uppercase fw-semibold">Recent service date</div>
+                                <div class="fw-semibold mt-2"><?php echo h($vehicle['last_service_date'] ?? 'N/A'); ?></div>
+                                <div class="small text-secondary mt-3">Date-based next service</div>
                                 <div class="fw-semibold"><?php echo h($vehicle['next_service_date'] ?? 'N/A'); ?></div>
-                            </div>
-                        </div>
-                                </div>
                             </div>
                         </div>
                     </div>
