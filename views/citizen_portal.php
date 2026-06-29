@@ -196,8 +196,8 @@ try {
                             <h5 class="mb-0 fw-bold text-success"><i class="bi bi-journal-text me-2"></i>My Registered Fleet Records</h5>
                             <div class="d-flex gap-2 no-print">
                                 <?php if ($total_vehicles > 0): ?>
-                                    <a href="/backend/export_record.php?vehicle_id=<?php echo urlencode((string) $vehicles[0]['vehicle_id']); ?>" class="btn btn-outline-secondary btn-sm">
-                                        <i class="bi bi-download me-1"></i> Download First Record
+                                    <a href="/backend/export_fleet_report.php" class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-download me-1"></i> Download Fleet Report
                                     </a>
                                 <?php endif; ?>
                                 <button type="button" class="btn btn-success btn-sm" onclick="window.print()">

@@ -194,7 +194,7 @@ if ($vehicleId <= 0) {
                                 <div class="fw-semibold"><?php echo h($vehicle['inspection_checked_at'] ?? 'Not checked yet'); ?></div>
                                 <div class="small text-secondary mt-3">Checked by</div>
                                 <div class="fw-semibold"><?php echo h($vehicle['inspection_checked_by_name'] ?? 'Officer not recorded'); ?></div>
-                                <div class="small text-secondary mt-2">Officer staff ID</div>
+                                <div class="small text-secondary mt-2">Inspector / Officer Staff ID</div>
                                 <div class="fw-semibold"><?php echo h($vehicle['inspection_checked_by_staff_id'] ?? 'N/A'); ?></div>
                                 <hr>
                                 <div class="small text-secondary text-uppercase fw-semibold">Latest service</div>

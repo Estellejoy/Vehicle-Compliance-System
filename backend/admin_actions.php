@@ -65,6 +65,15 @@ try {
             $staffId = 'OFF-' . strtoupper(bin2hex(random_bytes(2)));
         }
 
+        if ($role === 'officer' && $staffId !== null) {
+            $staffExists = $pdo->prepare('SELECT user_id FROM users WHERE staff_id = :staff_id LIMIT 1');
+            $staffExists->execute(['staff_id' => $staffId]);
+            if ($staffExists->fetch()) {
+                admin_flash('warning', 'That officer staff ID is already in use.');
+                redirect_admin();
+            }
+        }
+
         $exists = $pdo->prepare('SELECT user_id FROM users WHERE email = :email LIMIT 1');
         $exists->execute(['email' => $email]);
         if ($exists->fetch()) {
@@ -178,6 +187,28 @@ try {
             $staffId = null;
         } elseif ($staffId === '') {
             $staffId = 'OFF-' . strtoupper(bin2hex(random_bytes(2)));
+        }
+
+        if ($role === 'officer' && $staffId !== null) {
+            $staffExists = $pdo->prepare('SELECT user_id FROM users WHERE staff_id = :staff_id AND user_id <> :user_id LIMIT 1');
+            $staffExists->execute([
+                'staff_id' => $staffId,
+                'user_id' => $targetUserId,
+            ]);
+            if ($staffExists->fetch()) {
+                admin_flash('warning', 'That officer staff ID is already in use.');
+                redirect_admin();
+            }
+        }
+
+        if ($role !== 'admin') {
+            $stmt = $pdo->prepare('SELECT role FROM users WHERE user_id = :user_id LIMIT 1');
+            $stmt->execute(['user_id' => $targetUserId]);
+            $target = $stmt->fetch();
+            if (($target['role'] ?? '') === 'admin') {
+                admin_flash('warning', 'Admin accounts must remain admin accounts.');
+                redirect_admin();
+            }
         }
 
         $update = $pdo->prepare(

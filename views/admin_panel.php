@@ -215,7 +215,7 @@ try {
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="create_staff_id" class="form-label fw-semibold text-secondary">Officer Staff ID</label>
+                                    <label for="create_staff_id" class="form-label fw-semibold text-secondary">Inspector / Officer Staff ID</label>
                                     <input type="text" id="create_staff_id" name="staff_id" class="form-control" placeholder="OFF-003">
                                 </div>
                                 <div class="col-md-4">
@@ -326,7 +326,7 @@ try {
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
-                                <th>Staff ID</th>
+                                <th>Inspector / Officer Staff ID</th>
                                 <th>Role</th>
                                 <th>Status</th>
                                 <th>Reset Password</th>

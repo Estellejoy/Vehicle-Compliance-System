@@ -101,7 +101,7 @@ try {
         ['Inspection Status', $vehicle['inspection_status'] ?? 'Pending Police Check'],
         ['Inspection Checked At', $vehicle['inspection_checked_at'] ?? 'N/A'],
         ['Inspection Checked By', $vehicle['inspection_checked_by_name'] ?? 'Officer not recorded'],
-        ['Inspection Officer Staff ID', $vehicle['inspection_checked_by_staff_id'] ?? 'N/A'],
+        ['Inspector / Officer Staff ID', $vehicle['inspection_checked_by_staff_id'] ?? 'N/A'],
         ['Service Details', $vehicle['service_details'] ?? 'N/A'],
         ['Service Report Name', $vehicle['service_report_name'] ?? 'N/A'],
         ['Service Report Path', $vehicle['service_report_path'] ?? 'N/A'],

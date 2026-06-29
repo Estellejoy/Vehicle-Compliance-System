@@ -44,13 +44,15 @@ try {
     $monthly->execute(['report_year' => $year]);
     $monthlyRows = $monthly->fetchAll();
 
-    $filename = 'management_report_' . $year . '.csv';
+    $filename = 'annual_compliance_report_' . $year . '.csv';
     header('Content-Type: text/csv; charset=UTF-8');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
 
     $output = fopen('php://output', 'wb');
-    fputcsv($output, ['Management Report', $year]);
+    fputcsv($output, ['Annual Compliance Report', $year]);
+    fputcsv($output, ['Generated At', date('Y-m-d H:i:s')]);
     fputcsv($output, []);
+    fputcsv($output, ['Executive Summary', $year]);
     fputcsv($output, ['Metric', 'Value']);
 
     foreach ($summary as $label => $value) {
@@ -65,8 +67,17 @@ try {
     fputcsv($output, ['Month', 'Total Records', 'Valid', 'Expired']);
 
     $monthNames = [1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April', 5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August', 9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'];
+    $monthlyMap = [];
     foreach ($monthlyRows as $row) {
-        $monthNo = (int) $row['month_no'];
+        $monthlyMap[(int) $row['month_no']] = $row;
+    }
+
+    for ($monthNo = 1; $monthNo <= 12; $monthNo++) {
+        $row = $monthlyMap[$monthNo] ?? [
+            'total_records' => 0,
+            'valid_count' => 0,
+            'expired_count' => 0,
+        ];
         fputcsv($output, [
             $monthNames[$monthNo] ?? (string) $monthNo,
             $row['total_records'],
