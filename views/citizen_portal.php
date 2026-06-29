@@ -36,7 +36,7 @@ function inspectionBadgeClass($status)
 
 try {
     $stmt = $pdo->prepare(
-        "SELECT v.*, checker.name AS inspection_checked_by_name
+        "SELECT v.*, checker.name AS inspection_checked_by_name, checker.staff_id AS inspection_checked_by_staff_id
          FROM vehicles v
          LEFT JOIN users checker ON checker.user_id = v.inspection_checked_by
          WHERE v.owner_id = :user_id
@@ -102,7 +102,7 @@ try {
         .fine-card { border-left: 4px solid #dc3545; }
     </style>
 </head>
-<body>
+<body class="citizen-page">
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
         <div class="container">
@@ -192,7 +192,19 @@ try {
             <div class="col-12">
                 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
                     <div class="card-header bg-white py-3 border-bottom border-light">
-                        <h5 class="mb-0 fw-bold text-success"><i class="bi bi-journal-text me-2"></i>My Registered Fleet Records</h5>
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <h5 class="mb-0 fw-bold text-success"><i class="bi bi-journal-text me-2"></i>My Registered Fleet Records</h5>
+                            <div class="d-flex gap-2 no-print">
+                                <?php if ($total_vehicles > 0): ?>
+                                    <a href="/backend/export_record.php?vehicle_id=<?php echo urlencode((string) $vehicles[0]['vehicle_id']); ?>" class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-download me-1"></i> Download First Record
+                                    </a>
+                                <?php endif; ?>
+                                <button type="button" class="btn btn-success btn-sm" onclick="window.print()">
+                                    <i class="bi bi-printer me-1"></i> Print List
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         <?php if ($total_vehicles > 0): ?>
@@ -231,6 +243,9 @@ try {
                                                     <?php if (!empty($vehicle['inspection_checked_by_name'])): ?>
                                                         <div class="text-muted small">
                                                             By <?php echo htmlspecialchars($vehicle['inspection_checked_by_name']); ?>
+                                                            <?php if (!empty($vehicle['inspection_checked_by_staff_id'])): ?>
+                                                                (<?php echo htmlspecialchars($vehicle['inspection_checked_by_staff_id']); ?>)
+                                                            <?php endif; ?>
                                                         </div>
                                                     <?php endif; ?>
                                                 </td>
@@ -240,6 +255,12 @@ try {
                                                         href="/views/citizen_vehicle_details.php?vehicle_id=<?php echo urlencode((string) $vehicle['vehicle_id']); ?>"
                                                     >
                                                         <i class="bi bi-eye"></i> Details
+                                                    </a>
+                                                    <a
+                                                        class="btn btn-outline-secondary btn-sm fw-semibold ms-2"
+                                                        href="/backend/export_record.php?vehicle_id=<?php echo urlencode((string) $vehicle['vehicle_id']); ?>"
+                                                    >
+                                                        <i class="bi bi-download"></i> Download
                                                     </a>
                                                 </td>
                                             </tr>

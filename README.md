@@ -81,6 +81,13 @@ Then apply the inspection audit migration so the system stores who performed the
 type docker\mysql\migrations\03_add_vehicle_inspection_checked_by.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
 ```
 
+Then add the officer staff ID and service report upload columns used by the admin and officer dashboards:
+
+```cmd
+type docker\mysql\migrations\04_add_officer_staff_id.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
+type docker\mysql\migrations\05_add_service_report_upload.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
+```
+
 ### Seeded Tables
 
 The init schema creates these tables:
@@ -90,6 +97,8 @@ The init schema creates these tables:
 - `compliance_records`
 - `service_records`
 - `notifications`
+
+The `users` table also includes an optional `staff_id` column for officers and administrators, while `service_records` stores uploaded service report file details.
 
 It also loads the CSV-backed seed rows so the app can be tested immediately.
 

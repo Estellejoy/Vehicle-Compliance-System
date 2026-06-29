@@ -62,6 +62,15 @@ ON DUPLICATE KEY UPDATE
     role = VALUES(role),
     password_hash = VALUES(password_hash);
 
+UPDATE users
+SET staff_id = CASE user_id
+    WHEN 51 THEN 'OFF-001'
+    WHEN 52 THEN 'OFF-002'
+    WHEN 53 THEN 'ADM-001'
+    ELSE staff_id
+END
+WHERE user_id IN (51, 52, 53);
+
 INSERT INTO vehicles (vehicle_id, owner_id, plate_number, make, model, year, inspection_status, inspection_checked_at)
 VALUES
 ('1', '1', 'KDB 101D', 'Toyota', 'Premio', '2016', 'Pending Police Check', NULL),
@@ -449,5 +458,9 @@ ON DUPLICATE KEY UPDATE
     email = VALUES(email),
     role = VALUES(role),
     password_hash = VALUES(password_hash);
+
+UPDATE users
+SET staff_id = NULL
+WHERE user_id = 54;
 
 SET FOREIGN_KEY_CHECKS = 1;

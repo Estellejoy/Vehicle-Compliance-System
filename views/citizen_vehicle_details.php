@@ -56,6 +56,7 @@ if ($vehicleId <= 0) {
                 v.inspection_checked_at,
                 v.inspection_checked_by,
                 checker.name AS inspection_checked_by_name,
+                checker.staff_id AS inspection_checked_by_staff_id,
                 v.created_at AS vehicle_created_at,
                 c.insurance_expiry,
                 c.insurance_status,
@@ -102,7 +103,7 @@ if ($vehicleId <= 0) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="../assets/css/style.css" rel="stylesheet">
 </head>
-<body class="dashboard-page">
+<body class="dashboard-page citizen-page">
     <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
         <div class="container">
             <a class="navbar-brand text-white" href="<?php echo h($dashboardUrl); ?>">
@@ -193,6 +194,8 @@ if ($vehicleId <= 0) {
                                 <div class="fw-semibold"><?php echo h($vehicle['inspection_checked_at'] ?? 'Not checked yet'); ?></div>
                                 <div class="small text-secondary mt-3">Checked by</div>
                                 <div class="fw-semibold"><?php echo h($vehicle['inspection_checked_by_name'] ?? 'Officer not recorded'); ?></div>
+                                <div class="small text-secondary mt-2">Officer staff ID</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['inspection_checked_by_staff_id'] ?? 'N/A'); ?></div>
                                 <hr>
                                 <div class="small text-secondary text-uppercase fw-semibold">Latest service</div>
                                 <div class="fw-semibold mt-2"><?php echo h($vehicle['service_details'] ?? 'N/A'); ?></div>
@@ -202,7 +205,15 @@ if ($vehicleId <= 0) {
                                 <div class="fw-semibold"><?php echo h($vehicle['next_service_date'] ?? 'N/A'); ?></div>
                             </div>
                         </div>
-                                </div>
+
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end flex-wrap gap-2 no-print">
+                                <a href="/backend/export_record.php?vehicle_id=<?php echo urlencode((string) $vehicle['vehicle_id']); ?>" class="btn btn-outline-secondary">
+                                    <i class="bi bi-download me-1"></i> Download Report
+                                </a>
+                                <button type="button" class="btn btn-success" onclick="window.print()">
+                                    <i class="bi bi-printer me-1"></i> Print Record
+                                </button>
                             </div>
                         </div>
                     </div>

@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     role ENUM('admin', 'officer', 'owner') NOT NULL,
+    staff_id VARCHAR(50) NULL UNIQUE,
     password_hash VARCHAR(255) NULL,
     email_verified_at DATETIME NULL,
     email_verification_token_hash CHAR(64) NULL,
@@ -50,12 +51,20 @@ CREATE TABLE IF NOT EXISTS service_records (
     service_id INT AUTO_INCREMENT PRIMARY KEY,
     vehicle_id INT NOT NULL,
     service_details VARCHAR(255) NOT NULL,
+    service_report_path VARCHAR(255) NULL,
+    service_report_name VARCHAR(255) NULL,
     last_service_date DATE NOT NULL,
     next_service_date DATE NOT NULL,
+    uploaded_by INT NULL,
+    uploaded_at DATETIME NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_service_vehicle
         FOREIGN KEY (vehicle_id) REFERENCES vehicles(vehicle_id)
         ON DELETE CASCADE
+    ,
+    CONSTRAINT fk_service_uploaded_by
+        FOREIGN KEY (uploaded_by) REFERENCES users(user_id)
+        ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS notifications (

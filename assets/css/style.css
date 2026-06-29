@@ -226,7 +226,15 @@ body {
     .dashboard-page .dashboard-hero,
     .admin-page .report-hero,
     .admin-page .search-card .btn,
-    .admin-page .table .btn {
+    .admin-page .table .btn,
+    .admin-page .table form,
+    .admin-page form,
+    .citizen-page .no-print,
+    .citizen-page .navbar,
+    .citizen-page .btn,
+    .citizen-page .card-header,
+    .citizen-page .table .btn,
+    .citizen-page .table .badge {
         display: none !important;
     }
 
@@ -240,8 +248,16 @@ body {
     }
 
     .officer-dashboard main,
-    .admin-page main {
+    .admin-page main,
+    .citizen-page main {
         padding: 0;
+    }
+
+    .citizen-page .detail-card,
+    .citizen-page .card,
+    .citizen-page .card-body {
+        border: 0 !important;
+        box-shadow: none !important;
     }
 }
 

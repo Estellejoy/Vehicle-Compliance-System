@@ -59,7 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // 3. Save details safely to session string variables
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['name'] = $user['name'];
-            $_SESSION['role'] = $user['role']; 
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['staff_id'] = $user['staff_id'] ?? null;
             
             // 4. Redirect smoothly based on role
             if ($user['role'] === 'admin') {
