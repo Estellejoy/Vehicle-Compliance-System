@@ -33,6 +33,7 @@ $vehicleId = (int) ($_GET['vehicle_id'] ?? 0);
 $vehicle = null;
 $message = null;
 $messageType = 'info';
+$usersStaffIdEnabled = false;
 
 $dashboardUrl = '/views/citizen_portal.php';
 
@@ -41,6 +42,7 @@ if ($vehicleId <= 0) {
     $messageType = 'warning';
 } else {
     try {
+        $usersStaffIdEnabled = (bool) $pdo->query("SHOW COLUMNS FROM users LIKE 'staff_id'")->fetch();
         $stmt = $pdo->prepare(
             "SELECT
                 u.user_id,
@@ -55,8 +57,8 @@ if ($vehicleId <= 0) {
                 v.inspection_status,
                 v.inspection_checked_at,
                 v.inspection_checked_by,
-                checker.name AS inspection_checked_by_name,
-                checker.staff_id AS inspection_checked_by_staff_id,
+                checker.name AS inspection_checked_by_name" . ($usersStaffIdEnabled ? ",
+                checker.staff_id AS inspection_checked_by_staff_id" : "") . ",
                 v.created_at AS vehicle_created_at,
                 c.insurance_expiry,
                 c.insurance_status,

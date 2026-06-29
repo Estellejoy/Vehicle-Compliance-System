@@ -9,8 +9,10 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'owner') {
 require_once '../config/db.php';
 
 $ownerId = (int) $_SESSION['user_id'];
+$usersStaffIdEnabled = false;
 
 try {
+    $usersStaffIdEnabled = (bool) $pdo->query("SHOW COLUMNS FROM users LIKE 'staff_id'")->fetch();
     $stmt = $pdo->prepare(
         "SELECT
             v.vehicle_id,
@@ -20,8 +22,8 @@ try {
             v.year,
             v.inspection_status,
             v.inspection_checked_at,
-            checker.name AS inspection_checked_by_name,
-            checker.staff_id AS inspection_checked_by_staff_id,
+            checker.name AS inspection_checked_by_name" . ($usersStaffIdEnabled ? ",
+            checker.staff_id AS inspection_checked_by_staff_id" : "") . ",
             c.insurance_status,
             c.insurance_expiry,
             c.licence_status,

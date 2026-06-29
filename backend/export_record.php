@@ -10,6 +10,7 @@ if (!isset($_SESSION['user_id']) || !in_array($role, ['admin', 'officer', 'owner
 require_once '../config/db.php';
 
 $vehicleId = (int) ($_GET['vehicle_id'] ?? 0);
+$usersStaffIdEnabled = false;
 
 if ($vehicleId <= 0) {
     header('Location: ' . ($role === 'officer' ? '/views/officer_dashboard.php' : '/views/citizen_portal.php'));
@@ -17,6 +18,7 @@ if ($vehicleId <= 0) {
 }
 
 try {
+    $usersStaffIdEnabled = (bool) $pdo->query("SHOW COLUMNS FROM users LIKE 'staff_id'")->fetch();
     $params = ['vehicle_id' => $vehicleId];
     $ownerFilter = '';
 
@@ -43,15 +45,15 @@ try {
             c.registration_status,
             v.inspection_status,
             v.inspection_checked_at,
-            checker.name AS inspection_checked_by_name,
-            checker.staff_id AS inspection_checked_by_staff_id,
+            checker.name AS inspection_checked_by_name" . ($usersStaffIdEnabled ? ",
+            checker.staff_id AS inspection_checked_by_staff_id" : "") . ",
             s.service_details,
             s.service_report_name,
             s.service_report_path,
             s.last_service_date,
             s.next_service_date,
-            uploader.name AS service_uploaded_by_name,
-            uploader.staff_id AS service_uploaded_by_staff_id,
+            uploader.name AS service_uploaded_by_name" . ($usersStaffIdEnabled ? ",
+            uploader.staff_id AS service_uploaded_by_staff_id" : "") . ",
             s.uploaded_at
         FROM vehicles v
         INNER JOIN users u ON u.user_id = v.owner_id

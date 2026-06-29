@@ -35,8 +35,9 @@ function inspectionBadgeClass($status)
 }
 
 try {
+    $usersStaffIdEnabled = (bool) $pdo->query("SHOW COLUMNS FROM users LIKE 'staff_id'")->fetch();
     $stmt = $pdo->prepare(
-        "SELECT v.*, checker.name AS inspection_checked_by_name, checker.staff_id AS inspection_checked_by_staff_id
+        "SELECT v.*, checker.name AS inspection_checked_by_name" . ($usersStaffIdEnabled ? ", checker.staff_id AS inspection_checked_by_staff_id" : "") . "
          FROM vehicles v
          LEFT JOIN users checker ON checker.user_id = v.inspection_checked_by
          WHERE v.owner_id = :user_id

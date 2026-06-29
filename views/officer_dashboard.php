@@ -91,9 +91,10 @@ try {
     $inspectionFeatureEnabled = (bool) $inspectionStatusColumn && (bool) $inspectionCheckedAtColumn && (bool) $inspectionCheckedByColumn;
     $serviceReportPathColumn = $pdo->query("SHOW COLUMNS FROM service_records LIKE 'service_report_path'")->fetch();
     $serviceReportNameColumn = $pdo->query("SHOW COLUMNS FROM service_records LIKE 'service_report_name'")->fetch();
-    $serviceUploadByColumn = $pdo->query("SHOW COLUMNS FROM service_records LIKE 'uploaded_by'")->fetch();
+    $serviceUploadedByColumn = $pdo->query("SHOW COLUMNS FROM service_records LIKE 'uploaded_by'")->fetch();
     $serviceUploadAtColumn = $pdo->query("SHOW COLUMNS FROM service_records LIKE 'uploaded_at'")->fetch();
-    $serviceUploadFeatureEnabled = (bool) $serviceReportPathColumn && (bool) $serviceReportNameColumn && (bool) $serviceUploadByColumn && (bool) $serviceUploadAtColumn;
+    $usersStaffIdColumn = $pdo->query("SHOW COLUMNS FROM users LIKE 'staff_id'")->fetch();
+    $serviceUploadFeatureEnabled = (bool) $serviceReportPathColumn && (bool) $serviceReportNameColumn && (bool) $serviceUploadedByColumn && (bool) $serviceUploadAtColumn;
 } catch (PDOException $e) {
     error_log($e->getMessage());
 }
@@ -109,8 +110,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $plateNumber !== '') {
                 ? "v.inspection_status,
                     v.inspection_checked_at,
                     v.inspection_checked_by,
-                    checker.name AS inspection_checked_by_name,
-                    checker.staff_id AS inspection_checked_by_staff_id,"
+                    checker.name AS inspection_checked_by_name" . (!empty($usersStaffIdColumn) ? ",
+                    checker.staff_id AS inspection_checked_by_staff_id" : "") . ","
                 : "";
             $inspectionJoin = $inspectionFeatureEnabled
                 ? "LEFT JOIN users checker ON checker.user_id = v.inspection_checked_by"
@@ -119,8 +120,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $plateNumber !== '') {
                 ? "s.service_report_path,
                     s.service_report_name,
                     s.uploaded_at,
-                    uploader.name AS service_uploaded_by_name,
-                    uploader.staff_id AS service_uploaded_by_staff_id,"
+                    uploader.name AS service_uploaded_by_name" . (!empty($usersStaffIdColumn) ? ",
+                    uploader.staff_id AS service_uploaded_by_staff_id" : "") . ","
                 : "";
             $serviceJoin = $serviceUploadFeatureEnabled
                 ? "LEFT JOIN users uploader ON uploader.user_id = s.uploaded_by"
