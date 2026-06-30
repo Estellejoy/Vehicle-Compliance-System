@@ -62,6 +62,15 @@ ON DUPLICATE KEY UPDATE
     role = VALUES(role),
     password_hash = VALUES(password_hash);
 
+UPDATE users
+SET badge_number = CASE
+    WHEN user_id = 51 THEN 'OFF-0051'
+    WHEN user_id = 52 THEN 'OFF-0052'
+    WHEN user_id = 53 THEN 'ADM-0053'
+    ELSE badge_number
+END
+WHERE user_id IN (51, 52, 53);
+
 INSERT INTO user_roles (user_id, role, is_primary)
 SELECT user_id, role, 1
 FROM users
@@ -183,13 +192,39 @@ ON DUPLICATE KEY UPDATE
     inspection_checked_at = VALUES(inspection_checked_at);
 
 UPDATE vehicles
-SET chassis_number = COALESCE(chassis_number, CONCAT('VIN', LPAD(vehicle_id, 11, '0'))),
+SET chassis_number = COALESCE(
+        chassis_number,
+        CASE make
+            WHEN 'Toyota' THEN CONCAT('JT1', LPAD((vehicle_id * 7919) + year, 14, '0'))
+            WHEN 'Mazda' THEN CONCAT('JM1', LPAD((vehicle_id * 7919) + year, 14, '0'))
+            WHEN 'Honda' THEN CONCAT('JHM', LPAD((vehicle_id * 7919) + year, 14, '0'))
+            WHEN 'Subaru' THEN CONCAT('JF1', LPAD((vehicle_id * 7919) + year, 14, '0'))
+            WHEN 'Nissan' THEN CONCAT('JN1', LPAD((vehicle_id * 7919) + year, 14, '0'))
+            ELSE CONCAT('JTD', LPAD((vehicle_id * 7919) + year, 14, '0'))
+        END
+    ),
     insurance_type = COALESCE(insurance_type, CASE WHEN MOD(vehicle_id, 2) = 0 THEN 'Comprehensive' ELSE 'Third Party' END),
     payment_period = COALESCE(payment_period, 'Annual'),
     driver_licence_class = COALESCE(driver_licence_class, CASE WHEN year >= 2020 THEN 'B' ELSE 'C1' END),
-    odometer_km = COALESCE(odometer_km, 42000 + (vehicle_id * 850)),
-    service_interval_km = COALESCE(service_interval_km, 5000),
-    next_probable_service_km = COALESCE(next_probable_service_km, COALESCE(odometer_km, 42000 + (vehicle_id * 850)) + COALESCE(service_interval_km, 5000));
+    odometer_km = COALESCE(
+        odometer_km,
+        CASE
+            WHEN year >= 2023 THEN 18000 + (vehicle_id * 220)
+            WHEN year >= 2020 THEN 32000 + (vehicle_id * 260)
+            WHEN year >= 2017 THEN 48000 + (vehicle_id * 310)
+            ELSE 62000 + (vehicle_id * 340)
+        END
+    ),
+    service_interval_km = COALESCE(
+        service_interval_km,
+        CASE
+            WHEN year >= 2023 THEN 7000
+            WHEN year >= 2020 THEN 8000
+            WHEN year >= 2017 THEN 9000
+            ELSE 10000
+        END
+    ),
+    next_probable_service_km = COALESCE(next_probable_service_km, COALESCE(odometer_km, 32000 + (vehicle_id * 260)) + COALESCE(service_interval_km, 8000));
 
 INSERT IGNORE INTO vehicle_owners (vehicle_id, user_id, ownership_role, is_primary)
 VALUES ('1', '2', 'Co-owner', 0),
@@ -415,10 +450,37 @@ ON DUPLICATE KEY UPDATE
     next_service_date = VALUES(next_service_date);
 
 UPDATE service_records
-SET service_notes = COALESCE(service_notes, CONCAT(service_details, ': oil, filters, brakes, tyres, fluids, lights, and diagnostics.')),
-    last_service_odometer_km = COALESCE(last_service_odometer_km, 40000 + (service_id * 900)),
-    next_service_odometer_km = COALESCE(next_service_odometer_km, COALESCE(last_service_odometer_km, 40000 + (service_id * 900)) + COALESCE(service_interval_km, 5000)),
-    service_interval_km = COALESCE(service_interval_km, 5000);
+SET service_notes = COALESCE(
+        service_notes,
+        CASE service_details
+            WHEN 'Diagnostics' THEN 'Diagnostics: scanned error codes, inspected battery, brakes, tyres, lights, fluids, and suspension.'
+            WHEN 'Tyre rotation' THEN 'Tyre rotation: rotated tyres, checked pressure, wheel balance, alignment, and tread wear.'
+            WHEN 'Brake inspection' THEN 'Brake inspection: inspected pads, discs, brake fluid, calipers, and handbrake performance.'
+            WHEN 'Oil change' THEN 'Oil change: replaced engine oil and filter, checked fluids, battery, tyres, and lights.'
+            WHEN 'Engine tune-up' THEN 'Engine tune-up: checked spark plugs, ignition, air intake, filters, belts, fluids, and road test.'
+            WHEN 'Full service' THEN 'Full service: changed oil and filters, inspected brakes, tyres, suspension, fluids, lights, and diagnostics.'
+            ELSE CONCAT(service_details, ': inspected oil, filters, brakes, tyres, fluids, lights, and diagnostics.')
+        END
+    ),
+    last_service_odometer_km = COALESCE(last_service_odometer_km, 38000 + (service_id * 875)),
+    service_interval_km = COALESCE(
+        service_interval_km,
+        CASE service_details
+            WHEN 'Diagnostics' THEN 5000
+            WHEN 'Tyre rotation' THEN 7500
+            WHEN 'Brake inspection' THEN 8000
+            WHEN 'Oil change' THEN 5000
+            WHEN 'Engine tune-up' THEN 10000
+            WHEN 'Full service' THEN 10000
+            ELSE 6000
+        END
+    );
+
+UPDATE service_records
+SET next_service_odometer_km = COALESCE(
+        next_service_odometer_km,
+        COALESCE(last_service_odometer_km, 38000 + (service_id * 875)) + COALESCE(service_interval_km, 5000)
+    );
 
 INSERT INTO notifications (notification_id, user_id, notification_type, message, status, date_sent)
 VALUES

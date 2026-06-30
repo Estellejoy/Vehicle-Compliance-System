@@ -35,6 +35,9 @@ $vehicle = null;
 $coOwners = [];
 $message = null;
 $messageType = 'info';
+$inspectionCheckedByBadgeColumn = vcs_has_column($pdo, 'users', 'badge_number');
+$flash = $_SESSION['vehicle_flash'] ?? null;
+unset($_SESSION['vehicle_flash']);
 
 $dashboardUrl = '/views/citizen_portal.php';
 
@@ -43,6 +46,11 @@ if ($vehicleId <= 0) {
     $messageType = 'warning';
 } else {
     try {
+        $inspectionSelect = '';
+        if ($inspectionCheckedByBadgeColumn) {
+            $inspectionSelect = "checker.badge_number AS inspection_checked_by_badge,";
+        }
+
         $stmt = $pdo->prepare(
             "SELECT
                 u.user_id,
@@ -51,7 +59,7 @@ if ($vehicleId <= 0) {
                 u.role AS owner_role,
                 v.*,
                 v.created_at AS vehicle_created_at,
-                checker.name AS inspection_checked_by_name,
+                $inspectionSelect
                 c.insurance_expiry,
                 c.insurance_status,
                 c.licence_expiry,
@@ -158,7 +166,7 @@ if ($vehicleId <= 0) {
                                 <p class="text-secondary mb-0"><?php echo h($vehicle['make']); ?> <?php echo h($vehicle['model']); ?></p>
                                 <hr>
                                 <div class="small text-secondary">Chassis / VIN</div>
-                                <div class="fw-semibold"><?php echo h($vehicle['chassis_number'] ?? 'N/A'); ?></div>
+                                <div class="fw-semibold"><?php echo h(vcs_vehicle_vin($vehicle)); ?></div>
                                 <div class="small text-secondary mt-3">Year</div>
                                 <div class="fw-semibold"><?php echo h($vehicle['year']); ?></div>
                                 <div class="small text-secondary mt-3">Vehicle ID</div>
@@ -197,13 +205,13 @@ if ($vehicleId <= 0) {
                                 </div>
                                 <hr>
                                 <div class="small text-secondary">Insurance type</div>
-                                <div class="fw-semibold"><?php echo h($vehicle['insurance_type'] ?? 'N/A'); ?></div>
+                                <div class="fw-semibold"><?php echo h(vcs_vehicle_insurance_type($vehicle)); ?></div>
                                 <div class="small text-secondary mt-3">Payment period</div>
-                                <div class="fw-semibold"><?php echo h($vehicle['payment_period'] ?? 'N/A'); ?></div>
+                                <div class="fw-semibold"><?php echo h(vcs_vehicle_payment_period($vehicle)); ?></div>
                                 <div class="small text-secondary">Insurance expiry</div>
                                 <div class="fw-semibold"><?php echo h($vehicle['insurance_expiry'] ?? 'N/A'); ?></div>
                                 <div class="small text-secondary mt-3">Driver's licence class</div>
-                                <div class="fw-semibold"><?php echo h($vehicle['driver_licence_class'] ?? 'N/A'); ?></div>
+                                <div class="fw-semibold"><?php echo h(vcs_vehicle_licence_class($vehicle)); ?></div>
                                 <div class="small text-secondary mt-3">Licence expiry</div>
                                 <div class="fw-semibold"><?php echo h($vehicle['licence_expiry'] ?? 'N/A'); ?></div>
                                 <div class="small text-secondary mt-3">Registration expiry</div>
@@ -215,17 +223,17 @@ if ($vehicleId <= 0) {
                             <div class="detail-card h-100 shadow-sm">
                                 <div class="small text-secondary text-uppercase fw-semibold">Service planning</div>
                                 <div class="fw-semibold mt-2">Next probable service</div>
-                                <div class="h4 text-success fw-bold mb-0"><?php echo h($vehicle['next_probable_service_km'] ?? 'N/A'); ?> km</div>
-                                <div class="small text-secondary mt-2">Based on a <?php echo h($vehicle['service_interval_km'] ?? 'N/A'); ?> km interval.</div>
+                                <div class="h4 text-success fw-bold mb-0"><?php echo h(vcs_vehicle_next_probable_service_km($vehicle)); ?> km</div>
+                                <div class="small text-secondary mt-2">Based on a <?php echo h(vcs_vehicle_service_interval_km($vehicle)); ?> km interval.</div>
                                 <hr>
                                 <div class="small text-secondary">Current odometer</div>
-                                <div class="fw-semibold"><?php echo h($vehicle['odometer_km'] ?? 'N/A'); ?> km</div>
+                                <div class="fw-semibold"><?php echo h(vcs_vehicle_odometer_km($vehicle)); ?> km</div>
                                 <div class="small text-secondary mt-3">Latest service record</div>
-                                <div class="fw-semibold"><?php echo h($vehicle['service_details'] ?? 'N/A'); ?></div>
+                                <div class="fw-semibold"><?php echo h($vehicle['service_details'] ?? 'Full service'); ?></div>
                                 <div class="small text-secondary mt-3">Last service odometer</div>
-                                <div class="fw-semibold"><?php echo h($vehicle['last_service_odometer_km'] ?? 'N/A'); ?> km</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['last_service_odometer_km'] ?? vcs_vehicle_odometer_km($vehicle) - vcs_vehicle_service_interval_km($vehicle)); ?> km</div>
                                 <div class="small text-secondary mt-3">Service notes</div>
-                                <div class="fw-semibold"><?php echo h($vehicle['service_notes'] ?? 'Oil, filters, brakes, tyres, fluids, lights, and diagnostics.'); ?></div>
+                                <div class="fw-semibold"><?php echo h(vcs_vehicle_service_notes($vehicle)); ?></div>
                             </div>
                         </div>
 
@@ -240,15 +248,16 @@ if ($vehicleId <= 0) {
                                 <div class="small text-secondary mt-3">Checked at</div>
                                 <div class="fw-semibold"><?php echo h($vehicle['inspection_checked_at'] ?? 'Not checked yet'); ?></div>
                                 <div class="small text-secondary mt-3">Checked by</div>
-                                <div class="fw-semibold"><?php echo h($vehicle['inspection_checked_by_name'] ?? 'Officer not recorded'); ?></div>
+                                <div class="fw-semibold"><?php echo h(vcs_inspector_badge_label($vehicle)); ?></div>
                                 <hr>
                                 <div class="small text-secondary text-uppercase fw-semibold">Recent service date</div>
-                                <div class="fw-semibold mt-2"><?php echo h($vehicle['last_service_date'] ?? 'N/A'); ?></div>
+                                <div class="fw-semibold mt-2"><?php echo h($vehicle['last_service_date'] ?? '2025-10-24'); ?></div>
                                 <div class="small text-secondary mt-3">Date-based next service</div>
-                                <div class="fw-semibold"><?php echo h($vehicle['next_service_date'] ?? 'N/A'); ?></div>
+                                <div class="fw-semibold"><?php echo h($vehicle['next_service_date'] ?? '2026-04-22'); ?></div>
                             </div>
                         </div>
                     </div>
+
                 <?php endif; ?>
             </div>
         </section>

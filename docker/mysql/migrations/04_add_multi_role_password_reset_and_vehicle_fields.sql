@@ -59,7 +59,9 @@ SELECT user_id, role, 1
 FROM users;
 
 INSERT IGNORE INTO user_roles (user_id, role, is_primary)
-VALUES (54, 'officer', 0);
+SELECT user_id, 'officer', 0
+FROM users
+WHERE user_id = 54;
 
 INSERT IGNORE INTO vehicle_owners (vehicle_id, user_id, ownership_role, is_primary)
 VALUES (1, 2, 'Co-owner', 0),

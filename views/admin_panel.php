@@ -7,6 +7,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
 }
 
 require_once '../config/db.php';
+require_once __DIR__ . '/../backend/auth_helpers.php';
 
 function h($value)
 {
@@ -14,8 +15,9 @@ function h($value)
 }
 
 $currentAdminId = (int) $_SESSION['user_id'];
-$flash = null;
-$flashType = 'info';
+$flash = $_SESSION['admin_flash'] ?? null;
+unset($_SESSION['admin_flash']);
+$flashType = is_array($flash) ? ($flash['type'] ?? 'info') : 'info';
 
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -52,6 +54,7 @@ try {
 }
 
 $users = [];
+$userRolesByUserId = [];
 $report = [
     'total_users' => 0,
     'active_users' => 0,
@@ -74,6 +77,22 @@ try {
          FROM users
          ORDER BY created_at DESC, user_id DESC"
     )->fetchAll();
+
+    if (vcs_has_table($pdo, 'user_roles')) {
+        $userRoles = $pdo->query(
+            "SELECT user_id, role, is_primary
+             FROM user_roles
+             ORDER BY user_id ASC, is_primary DESC, role ASC"
+        )->fetchAll();
+
+        foreach ($userRoles as $userRole) {
+            $userId = (int) $userRole['user_id'];
+            $userRolesByUserId[$userId][] = [
+                'role' => $userRole['role'],
+                'is_primary' => (int) $userRole['is_primary'] === 1,
+            ];
+        }
+    }
 
     $report['total_users'] = (int) $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
     $report['active_users'] = (int) $pdo->query("SELECT COUNT(*) FROM users WHERE COALESCE(is_active, 1) = 1")->fetchColumn();
@@ -216,9 +235,60 @@ try {
 
                 <?php if ($flash): ?>
                     <div class="alert alert-<?php echo h($flashType); ?> mt-4" role="alert">
-                        <?php echo h($flash); ?>
+                        <?php echo h(is_array($flash) ? ($flash['message'] ?? '') : $flash); ?>
                     </div>
                 <?php endif; ?>
+
+                <div class="mt-4 search-card shadow-sm">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                        <div>
+                            <span class="text-uppercase small fw-semibold text-success">Role assignment</span>
+                            <h2 class="h4 fw-bold mb-0">Give one account multiple roles</h2>
+                        </div>
+                        <i class="bi bi-person-badge text-success fs-3"></i>
+                    </div>
+
+                    <form action="/backend/manage_user_roles.php" method="POST" class="mt-4">
+                        <div class="row g-3">
+                            <div class="col-lg-4">
+                                <label for="user_id" class="form-label fw-semibold text-secondary">User</label>
+                                <select id="user_id" name="user_id" class="form-select form-select-lg" required>
+                                    <option value="">Select a user</option>
+                                    <?php foreach ($users as $user): ?>
+                                        <option value="<?php echo h($user['user_id']); ?>">
+                                            <?php echo h($user['name']); ?> (<?php echo h($user['email']); ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-lg-5">
+                                <label class="form-label fw-semibold text-secondary">Roles</label>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <?php foreach (vcs_admin_role_labels() as $roleValue => $roleLabel): ?>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="roles[]" value="<?php echo h($roleValue); ?>" id="role_<?php echo h($roleValue); ?>" checked>
+                                            <label class="form-check-label" for="role_<?php echo h($roleValue); ?>"><?php echo h($roleLabel); ?></label>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="primary_role" class="form-label fw-semibold text-secondary">Primary role</label>
+                                <select id="primary_role" name="primary_role" class="form-select form-select-lg" required>
+                                    <?php foreach (vcs_admin_role_labels() as $roleValue => $roleLabel): ?>
+                                        <option value="<?php echo h($roleValue); ?>"><?php echo h($roleLabel); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-3">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-save me-1"></i> Save Roles
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </section>
 
@@ -238,6 +308,7 @@ try {
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Role</th>
+                                <th>Assigned Roles</th>
                                 <th>Status</th>
                                 <th>Created</th>
                                 <th class="text-end">Actions</th>
@@ -249,6 +320,19 @@ try {
                                     <td class="fw-semibold"><?php echo h($user['name']); ?></td>
                                     <td><?php echo h($user['email']); ?></td>
                                     <td class="text-capitalize"><?php echo h($user['role']); ?></td>
+                                    <td>
+                                        <?php if (!empty($userRolesByUserId[(int) $user['user_id']])): ?>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <?php foreach ($userRolesByUserId[(int) $user['user_id']] as $roleItem): ?>
+                                                    <span class="badge <?php echo $roleItem['is_primary'] ? 'bg-success' : 'bg-secondary'; ?>">
+                                                        <?php echo h(vcs_role_label($roleItem['role'])); ?><?php echo $roleItem['is_primary'] ? ' (Primary)' : ''; ?>
+                                                    </span>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <span class="text-secondary small">No role records</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td>
                                         <?php if ((int) $user['is_active'] === 1): ?>
                                             <span class="badge bg-success">Active</span>
