@@ -88,6 +88,25 @@ type docker\mysql\migrations\04_add_officer_staff_id.sql | docker exec -i vehicl
 type docker\mysql\migrations\05_add_service_report_upload.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
 ```
 
+To add the demo owner and officer accounts used for testing, apply:
+
+```cmd
+type docker\mysql\migrations\06_add_demo_accounts.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
+```
+
+To add demo vehicle and workflow data for those accounts, apply:
+
+```cmd
+type docker\mysql\migrations\07_add_demo_account_data.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
+```
+
+Demo login details:
+
+- Owner: `joy.gatiti@strathmore.edu`
+- Owner password: `joy.gatiti@123`
+- Officer: `jemima.moye@strathmore.edu`
+- Officer password: `jemima.moye@123`
+
 ### Seeded Tables
 
 The init schema creates these tables:
