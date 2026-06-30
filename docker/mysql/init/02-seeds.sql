@@ -79,7 +79,14 @@ ON DUPLICATE KEY UPDATE
 
 INSERT IGNORE INTO user_roles (user_id, role, is_primary)
 VALUES ('54', 'officer', 0);
-
+UPDATE users
+SET staff_id = CASE user_id
+    WHEN 51 THEN 'OFF-001'
+    WHEN 52 THEN 'OFF-002'
+    WHEN 53 THEN 'ADM-001'
+    ELSE staff_id
+END
+WHERE user_id IN (51, 52, 53);
 INSERT INTO vehicles (vehicle_id, owner_id, plate_number, make, model, year, inspection_status, inspection_checked_at)
 VALUES
 ('1', '1', 'KDB 101D', 'Toyota', 'Premio', '2016', 'Pending Police Check', NULL),
@@ -357,14 +364,14 @@ VALUES
 ('12', '12', 'Brake inspection', '2025-06-16', '2025-12-13'),
 ('13', '13', 'Engine tune-up', '2025-09-08', '2026-03-07'),
 ('14', '14', 'Brake inspection', '2025-05-16', '2025-11-12'),
-('15', '15', 'Oil change', '2025-06-24', '2025-12-21'),
+('15', '15', 'Upload Service Report / Service Form', '2025-06-24', '2025-12-21'),
 ('16', '16', 'Tyre rotation', '2026-01-02', '2026-07-01'),
 ('17', '17', 'Diagnostics', '2025-06-22', '2025-12-19'),
 ('18', '18', 'Full service', '2025-07-14', '2026-01-10'),
 ('19', '19', 'Brake inspection', '2026-04-10', '2026-10-07'),
 ('20', '20', 'Full service', '2025-06-17', '2025-12-14'),
 ('21', '21', 'Brake inspection', '2026-02-01', '2026-07-31'),
-('22', '22', 'Oil change', '2026-03-13', '2026-09-09'),
+('22', '22', 'Upload Service Report / Service Form', '2026-03-13', '2026-09-09'),
 ('23', '23', 'Brake inspection', '2026-05-04', '2026-10-31'),
 ('24', '24', 'Tyre rotation', '2025-09-26', '2026-03-25'),
 ('25', '25', 'Engine tune-up', '2026-04-20', '2026-10-17'),
@@ -374,11 +381,11 @@ VALUES
 ('29', '29', 'Engine tune-up', '2025-11-12', '2026-05-11'),
 ('30', '30', 'Brake inspection', '2025-11-04', '2026-05-03'),
 ('31', '31', 'Diagnostics', '2026-03-13', '2026-09-09'),
-('32', '32', 'Oil change', '2025-06-09', '2025-12-06'),
+('32', '32', 'Upload Service Report / Service Form', '2025-06-09', '2025-12-06'),
 ('33', '33', 'Engine tune-up', '2026-04-03', '2026-09-30'),
 ('34', '34', 'Brake inspection', '2026-02-04', '2026-08-03'),
 ('35', '35', 'Tyre rotation', '2025-06-05', '2025-12-02'),
-('36', '36', 'Oil change', '2025-10-02', '2026-03-31'),
+('36', '36', 'Upload Service Report / Service Form', '2025-10-02', '2026-03-31'),
 ('37', '37', 'Brake inspection', '2025-08-15', '2026-02-11'),
 ('38', '38', 'Engine tune-up', '2026-03-26', '2026-09-22'),
 ('39', '39', 'Engine tune-up', '2026-03-20', '2026-09-16'),
@@ -403,7 +410,7 @@ VALUES
 ('58', '58', 'Brake inspection', '2026-03-11', '2026-09-07'),
 ('59', '59', 'Diagnostics', '2025-11-12', '2026-05-11'),
 ('60', '60', 'Diagnostics', '2026-03-10', '2026-09-06'),
-('61', '61', 'Oil change', '2026-02-07', '2026-08-06'),
+('61', '61', 'Upload Service Report / Service Form', '2026-02-07', '2026-08-06'),
 ('62', '62', 'Engine tune-up', '2025-10-27', '2026-04-25'),
 ('63', '63', 'Tyre rotation', '2025-12-09', '2026-06-07'),
 ('64', '64', 'Engine tune-up', '2025-10-01', '2026-03-30'),
@@ -419,30 +426,30 @@ VALUES
 ('74', '74', 'Brake inspection', '2025-07-23', '2026-01-19'),
 ('75', '75', 'Brake inspection', '2025-09-20', '2026-03-19'),
 ('76', '76', 'Engine tune-up', '2026-01-08', '2026-07-07'),
-('77', '77', 'Oil change', '2025-09-21', '2026-03-20'),
+('77', '77', 'Upload Service Report / Service Form', '2025-09-21', '2026-03-20'),
 ('78', '78', 'Full service', '2025-11-09', '2026-05-08'),
 ('79', '79', 'Diagnostics', '2025-06-19', '2025-12-16'),
 ('80', '80', 'Diagnostics', '2025-11-01', '2026-04-30'),
 ('81', '81', 'Engine tune-up', '2026-03-04', '2026-08-31'),
 ('82', '82', 'Tyre rotation', '2026-03-23', '2026-09-19'),
-('83', '83', 'Oil change', '2025-08-27', '2026-02-23'),
+('83', '83', 'Upload Service Report / Service Form', '2025-08-27', '2026-02-23'),
 ('84', '84', 'Tyre rotation', '2025-11-07', '2026-05-06'),
 ('85', '85', 'Diagnostics', '2025-08-12', '2026-02-08'),
-('86', '86', 'Oil change', '2026-05-14', '2026-11-10'),
+('86', '86', 'Upload Service Report / Service Form', '2026-05-14', '2026-11-10'),
 ('87', '87', 'Engine tune-up', '2025-07-02', '2025-12-29'),
 ('88', '88', 'Engine tune-up', '2026-03-19', '2026-09-15'),
-('89', '89', 'Oil change', '2026-02-23', '2026-08-22'),
+('89', '89', 'Upload Service Report / Service Form', '2026-02-23', '2026-08-22'),
 ('90', '90', 'Engine tune-up', '2026-01-14', '2026-07-13'),
 ('91', '91', 'Brake inspection', '2025-12-11', '2026-06-09'),
 ('92', '92', 'Full service', '2025-10-07', '2026-04-05'),
 ('93', '93', 'Engine tune-up', '2025-12-06', '2026-06-04'),
 ('94', '94', 'Engine tune-up', '2026-01-05', '2026-07-04'),
-('95', '95', 'Oil change', '2026-01-18', '2026-07-17'),
-('96', '96', 'Oil change', '2025-09-29', '2026-03-28'),
-('97', '97', 'Oil change', '2025-08-24', '2026-02-20'),
+('95', '95', 'Upload Service Report / Service Form', '2026-01-18', '2026-07-17'),
+('96', '96', 'Upload Service Report / Service Form', '2025-09-29', '2026-03-28'),
+('97', '97', 'Upload Service Report / Service Form', '2025-08-24', '2026-02-20'),
 ('98', '98', 'Brake inspection', '2025-11-29', '2026-05-28'),
-('99', '99', 'Oil change', '2025-06-29', '2025-12-26'),
-('100', '100', 'Oil change', '2025-06-28', '2025-12-25')
+('99', '99', 'Upload Service Report / Service Form', '2025-06-29', '2025-12-26'),
+('100', '100', 'Upload Service Report / Service Form', '2025-06-28', '2025-12-25')
 ON DUPLICATE KEY UPDATE
     vehicle_id = VALUES(vehicle_id),
     service_details = VALUES(service_details),
@@ -539,5 +546,156 @@ ON DUPLICATE KEY UPDATE
     email = VALUES(email),
     role = VALUES(role),
     password_hash = VALUES(password_hash);
+
+INSERT INTO users (user_id, name, email, role, staff_id, password_hash, email_verified_at, email_verification_token_hash, email_verification_expires_at, is_active)
+VALUES
+('55', 'Jemima Moye', 'jemima.moye@strathmore.edu', 'officer', 'OFF-DEMO-001', '$2y$10$6a7IveO.Ql37nUK.H79Kq.5TSQPf8tIKwuevPtJxJdl64gbJlsThy', NOW(), NULL, NULL, 1)
+ON DUPLICATE KEY UPDATE
+    name = VALUES(name),
+    email = VALUES(email),
+    role = VALUES(role),
+    staff_id = VALUES(staff_id),
+    password_hash = VALUES(password_hash),
+    email_verified_at = VALUES(email_verified_at),
+    email_verification_token_hash = VALUES(email_verification_token_hash),
+    email_verification_expires_at = VALUES(email_verification_expires_at),
+    is_active = VALUES(is_active);
+
+INSERT INTO user_roles (user_id, role, is_primary)
+VALUES ('55', 'officer', 1)
+ON DUPLICATE KEY UPDATE
+    is_primary = VALUES(is_primary);
+
+INSERT INTO vehicles (
+    vehicle_id,
+    owner_id,
+    plate_number,
+    make,
+    model,
+    year,
+    inspection_status,
+    inspection_checked_at,
+    inspection_checked_by
+)
+VALUES
+(
+    101,
+    54,
+    'KDH 201A',
+    'Toyota',
+    'Corolla Axio',
+    2021,
+    'Inspected',
+    NOW(),
+    55
+)
+ON DUPLICATE KEY UPDATE
+    owner_id = VALUES(owner_id),
+    plate_number = VALUES(plate_number),
+    make = VALUES(make),
+    model = VALUES(model),
+    year = VALUES(year),
+    inspection_status = VALUES(inspection_status),
+    inspection_checked_at = VALUES(inspection_checked_at),
+    inspection_checked_by = VALUES(inspection_checked_by);
+
+INSERT INTO compliance_records (
+    compliance_id,
+    vehicle_id,
+    insurance_expiry,
+    insurance_status,
+    licence_expiry,
+    licence_status,
+    registration_expiry,
+    registration_status
+)
+VALUES
+(
+    101,
+    101,
+    DATE_ADD(CURDATE(), INTERVAL 180 DAY),
+    'Valid',
+    DATE_ADD(CURDATE(), INTERVAL 365 DAY),
+    'Valid',
+    DATE_ADD(CURDATE(), INTERVAL 210 DAY),
+    'Valid'
+)
+ON DUPLICATE KEY UPDATE
+    vehicle_id = VALUES(vehicle_id),
+    insurance_expiry = VALUES(insurance_expiry),
+    insurance_status = VALUES(insurance_status),
+    licence_expiry = VALUES(licence_expiry),
+    licence_status = VALUES(licence_status),
+    registration_expiry = VALUES(registration_expiry),
+    registration_status = VALUES(registration_status);
+
+INSERT INTO service_records (
+    service_id,
+    vehicle_id,
+    service_details,
+    service_report_path,
+    service_report_name,
+    last_service_date,
+    next_service_date,
+    uploaded_by,
+    uploaded_at
+)
+VALUES
+(
+    101,
+    101,
+    'Full service and inspection demo record',
+    NULL,
+    NULL,
+    CURDATE(),
+    DATE_ADD(CURDATE(), INTERVAL 180 DAY),
+    55,
+    NOW()
+)
+ON DUPLICATE KEY UPDATE
+    vehicle_id = VALUES(vehicle_id),
+    service_details = VALUES(service_details),
+    service_report_path = VALUES(service_report_path),
+    service_report_name = VALUES(service_report_name),
+    last_service_date = VALUES(last_service_date),
+    next_service_date = VALUES(next_service_date),
+    uploaded_by = VALUES(uploaded_by),
+    uploaded_at = VALUES(uploaded_at);
+
+INSERT INTO notifications (
+    notification_id,
+    user_id,
+    notification_type,
+    message,
+    status,
+    date_sent
+)
+VALUES
+(
+    41,
+    54,
+    'Inspection',
+    'Your demo vehicle KDH 201A has been inspected by OFF-DEMO-001.',
+    'Unread',
+    CURDATE()
+),
+(
+    42,
+    55,
+    'Assignment',
+    'Demo inspection data has been seeded for Joy Gatiti.',
+    'Unread',
+    CURDATE()
+)
+ON DUPLICATE KEY UPDATE
+    user_id = VALUES(user_id),
+    notification_type = VALUES(notification_type),
+    message = VALUES(message),
+    status = VALUES(status),
+    date_sent = VALUES(date_sent);
+
+UPDATE users
+SET staff_id = NULL
+WHERE user_id = 54;
 
 SET FOREIGN_KEY_CHECKS = 1;

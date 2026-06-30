@@ -1,0 +1,11 @@
+Vehicle Service Report
+
+This is a dummy service form for testing the officer upload workflow.
+
+Fields included in a real submission:
+- Vehicle registration number
+- Service details
+- Last service date
+- Next service date
+- Mechanic or workshop notes
+- Supporting attachments

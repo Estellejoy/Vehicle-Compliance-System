@@ -91,6 +91,9 @@ $compliance = Import-Csv (Join-Path $SourceFolder 'compliance_records.csv') | So
 $services = Import-Csv (Join-Path $SourceFolder 'service_records.csv') | Sort-Object { [int]$_.service_id }
 $notifications = Import-Csv (Join-Path $SourceFolder 'notifications.csv') | Sort-Object { [int]$_.notification_id }
 
+$script:OfficerSequence = 0
+$script:AdminSequence = 0
+
 $users = foreach ($row in $users) {
     $localPart = ($row.email -split '@')[0]
     [pscustomobject]@{
@@ -98,20 +101,24 @@ $users = foreach ($row in $users) {
         name          = $row.name
         email         = $row.email
         role          = $row.role
+        staff_id      = if ($row.role -eq 'officer') {
+            $script:OfficerSequence++
+            ('OFF-{0:D3}' -f $script:OfficerSequence)
+        } elseif ($row.role -eq 'admin') {
+            $script:AdminSequence++
+            ('ADM-{0:D3}' -f $script:AdminSequence)
+        } else {
+            $null
+        }
         password_hash = New-PasswordHash "$localPart@123"
     }
 }
 
 Write-SeedBlock `
     -Table 'users' `
-    -Columns @('user_id', 'name', 'email', 'role', 'password_hash') `
+    -Columns @('user_id', 'name', 'email', 'role', 'staff_id', 'password_hash') `
     -Rows $users `
-<<<<<<< Updated upstream
-    -UpdateColumns @('name', 'email', 'role', 'password_hash') `
-    -ExtraValues @{ password_hash = $null }
-=======
-    -UpdateColumns @('name', 'email', 'role', 'password_hash')
->>>>>>> Stashed changes
+    -UpdateColumns @('name', 'email', 'role', 'staff_id', 'password_hash')
 
 $vehicleRows = foreach ($row in $vehicles) {
     [pscustomobject]@{

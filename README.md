@@ -65,7 +65,7 @@ Local environment files:
 
 - `.env` contains your machine-specific Compose values and seeded app account details.
 - `.env.example` shows the same keys with placeholder values.
-- `APP_URL`, `MAIL_FROM_ADDRESS`, and `MAIL_FROM_NAME` support the registration email flow.
+- `APP_URL`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`, and `MAIL_REPLY_TO_ADDRESS` support the registration email flow.
 
 The first database start loads the schema from `docker/mysql/init/01-schema.sql`.
 
@@ -81,6 +81,32 @@ Then apply the inspection audit migration so the system stores who performed the
 type docker\mysql\migrations\03_add_vehicle_inspection_checked_by.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
 ```
 
+Then add the officer staff ID and service report upload columns used by the admin and officer dashboards:
+
+```cmd
+type docker\mysql\migrations\04_add_officer_staff_id.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
+type docker\mysql\migrations\05_add_service_report_upload.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
+```
+
+To add the demo owner and officer accounts used for testing, apply:
+
+```cmd
+type docker\mysql\migrations\06_add_demo_accounts.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
+```
+
+To add demo vehicle and workflow data for those accounts, apply:
+
+```cmd
+type docker\mysql\migrations\07_add_demo_account_data.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
+```
+
+Demo login details:
+
+- Owner: `joy.gatiti@strathmore.edu`
+- Owner password: `joy.gatiti@123`
+- Officer: `jemima.moye@strathmore.edu`
+- Officer password: `jemima.moye@123`
+
 ### Seeded Tables
 
 The init schema creates these tables:
@@ -90,6 +116,8 @@ The init schema creates these tables:
 - `compliance_records`
 - `service_records`
 - `notifications`
+
+The `users` table also includes an optional `staff_id` column for officers and administrators, while `service_records` stores uploaded service report file details.
 
 It also loads the CSV-backed seed rows so the app can be tested immediately.
 
