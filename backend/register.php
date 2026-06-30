@@ -2,6 +2,7 @@
 session_start();
 
 require_once '../config/db.php';
+require_once __DIR__ . '/../config/mail.php';
 
 function flash_register(array $payload): void
 {
@@ -95,19 +96,7 @@ try {
     $appUrl = rtrim(getenv('APP_URL') ?: 'http://localhost:8080', '/');
     $verifyLink = $appUrl . '/verify.php?token=' . urlencode($token);
 
-    $fromAddress = getenv('MAIL_FROM_ADDRESS') ?: 'no-reply@localhost';
-    $fromName = getenv('MAIL_FROM_NAME') ?: 'Vehicle Compliance System';
-    $subject = 'Verify your Vehicle Compliance System account';
-    $body = "Hello {$name},\n\n";
-    $body .= "Please verify your account by opening this link within 24 hours:\n{$verifyLink}\n\n";
-    $body .= "If you did not create this account, you can ignore this message.";
-    $headers = [
-        'From: ' . $fromName . ' <' . $fromAddress . '>',
-        'Reply-To: ' . $fromAddress,
-        'Content-Type: text/plain; charset=UTF-8',
-    ];
-
-    $mailSent = @mail($email, $subject, $body, implode("\r\n", $headers));
+    $mailSent = sendVerificationEmail($email, $name, $verifyLink);
 
     $message = $mailSent
         ? 'Registration successful. Check your email for the verification link.'

@@ -14,8 +14,14 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-vcs_password}
       DB_CHARSET: ${DB_CHARSET:-utf8mb4}
       APP_URL: ${APP_URL:-http://localhost:8080}
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-tls}
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-no-reply@localhost}
       MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Vehicle Compliance System}
+      MAIL_REPLY_TO_ADDRESS: ${MAIL_REPLY_TO_ADDRESS:-}
     depends_on:
       db:
         condition: service_healthy

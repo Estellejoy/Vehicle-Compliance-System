@@ -65,7 +65,7 @@ Local environment files:
 
 - `.env` contains your machine-specific Compose values and seeded app account details.
 - `.env.example` shows the same keys with placeholder values.
-- `APP_URL`, `MAIL_FROM_ADDRESS`, and `MAIL_FROM_NAME` support the registration email flow.
+- `APP_URL`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`, and `MAIL_REPLY_TO_ADDRESS` support the registration email flow.
 
 The first database start loads the schema from `docker/mysql/init/01-schema.sql`.
 
