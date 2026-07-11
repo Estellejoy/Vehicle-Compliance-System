@@ -177,6 +177,7 @@ php tools/backfill-passwords.php
 After logging in, users can open `Change Password` from any dashboard to replace their temporary password with a personal one.
 Police inspection updates now record the officer name and the Nairobi-local timestamp of the last check.
 Vehicle owners now receive email plus in-app reminders when insurance or driving licence expiry is exactly 14 days away, and they receive an email plus in-app notification when an inspection status update is saved.
+The login page's `Forgot Password` flow now emails a reset link to the account email address, and admins can either send the same reset link from the admin panel or set a new password directly.
 
 ### Scheduled Reminders
 

@@ -2,8 +2,7 @@
 session_start();
 
 require_once '../config/db.php';
-require_once __DIR__ . '/auth_helpers.php';
-require_once __DIR__ . '/../config/mail.php';
+require_once __DIR__ . '/password_reset_service.php';
 
 function flash_forgot(array $payload): void
 {
@@ -31,7 +30,7 @@ try {
     $stmt->execute(['email' => $email]);
     $user = $stmt->fetch();
 
-    $genericMessage = 'If an active account exists for that email, we have prepared a reset link.';
+    $genericMessage = 'If an active account exists for that email, we have sent a reset link.';
 
     if (!$user) {
         flash_forgot([
@@ -47,36 +46,21 @@ try {
         ]);
     }
 
-    $token = bin2hex(random_bytes(32));
-    $tokenHash = hash('sha256', $token);
-    $expiresAt = vcs_password_reset_expiry();
+    $request = vcs_send_password_reset_link($pdo, $user);
 
-    $cleanup = $pdo->prepare('DELETE FROM password_reset_tokens WHERE user_id = :user_id');
-    $cleanup->execute(['user_id' => $user['user_id']]);
-
-    $insert = $pdo->prepare(
-        'INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
-         VALUES (:user_id, :token_hash, :expires_at)'
-    );
-    $insert->execute([
-        'user_id' => $user['user_id'],
-        'token_hash' => $tokenHash,
-        'expires_at' => $expiresAt,
-    ]);
-
-    $appUrl = rtrim(getenv('APP_URL') ?: 'http://localhost:8080', '/');
-    $resetLink = $appUrl . '/reset-password?token=' . urlencode($token);
-
-    $mailSent = sendPasswordResetEmail($user['email'], $user['name'], $resetLink);
-
-    flash_forgot([
-        'type' => 'success',
-        'message' => $mailSent
+    $payload = [
+        'type' => $request['mail_sent'] ? 'success' : 'warning',
+        'message' => $request['mail_sent']
             ? 'Password reset link sent to your email address.'
             : 'Password reset link generated, but email delivery is not configured on this server.',
-        'reset_link' => $resetLink,
-    ]);
-} catch (PDOException $e) {
+    ];
+
+    if (!$request['mail_sent']) {
+        $payload['reset_link'] = $request['reset_link'];
+    }
+
+    flash_forgot($payload);
+} catch (Throwable $e) {
     error_log($e->getMessage());
     flash_forgot([
         'type' => 'danger',

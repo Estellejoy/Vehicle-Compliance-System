@@ -3,6 +3,7 @@ session_start();
 
 require_once '../config/db.php';
 require_once __DIR__ . '/auth_helpers.php';
+require_once __DIR__ . '/password_reset_service.php';
 
 function flash_reset(array $payload): void
 {
@@ -61,18 +62,7 @@ try {
         ]);
     }
 
-    $tokenHash = hash('sha256', $token);
-    $stmt = $pdo->prepare(
-        'SELECT prt.token_id, prt.user_id, u.email
-         FROM password_reset_tokens prt
-         INNER JOIN users u ON u.user_id = prt.user_id
-         WHERE prt.token_hash = :token_hash
-           AND prt.expires_at > NOW()
-           AND prt.used_at IS NULL
-         LIMIT 1'
-    );
-    $stmt->execute(['token_hash' => $tokenHash]);
-    $reset = $stmt->fetch();
+    $reset = vcs_find_password_reset_request($pdo, $token);
 
     if (!$reset) {
         flash_reset([
@@ -81,29 +71,13 @@ try {
         ]);
     }
 
-    $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
-    $pdo->beginTransaction();
-
-    $update = $pdo->prepare('UPDATE users SET password_hash = :password_hash WHERE user_id = :user_id');
-    $update->execute([
-        'password_hash' => $newHash,
-        'user_id' => $reset['user_id'],
-    ]);
-
-    $markUsed = $pdo->prepare(
-        'UPDATE password_reset_tokens
-         SET used_at = NOW()
-         WHERE user_id = :user_id'
-    );
-    $markUsed->execute(['user_id' => $reset['user_id']]);
-
-    $pdo->commit();
+    vcs_apply_password_reset($pdo, (int) $reset['token_id'], (int) $reset['user_id'], $newPassword);
 
     $_SESSION['flash_type'] = 'success';
     $_SESSION['flash_message'] = 'Password updated successfully. Please log in again.';
     header('Location: /login');
     exit;
-} catch (PDOException $e) {
+} catch (Throwable $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }

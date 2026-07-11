@@ -305,6 +305,12 @@ try {
                         <?php if (!empty($flash['generated_password'])): ?>
                             <div class="small mt-2"><strong>Temporary password:</strong> <?php echo h($flash['generated_password']); ?></div>
                         <?php endif; ?>
+                        <?php if (!empty($flash['reset_link'])): ?>
+                            <div class="small mt-2">
+                                <strong>Reset link:</strong>
+                                <a href="<?php echo h($flash['reset_link']); ?>" class="link-success"><?php echo h($flash['reset_link']); ?></a>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
             </div>
@@ -383,6 +389,13 @@ try {
                                             <input type="password" name="new_password" class="form-control form-control-sm" placeholder="New password">
                                             <input type="password" name="confirm_password" class="form-control form-control-sm" placeholder="Confirm">
                                             <button type="submit" class="btn btn-sm btn-outline-secondary">Reset</button>
+                                        </form>
+                                        <form action="/backend/admin_actions.php" method="POST" class="mt-2">
+                                            <input type="hidden" name="action" value="send_reset_link">
+                                            <input type="hidden" name="user_id" value="<?php echo h($user['user_id']); ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-success w-100">
+                                                Send Reset Link
+                                            </button>
                                         </form>
                                     </td>
                                     <td class="text-secondary small"><?php echo h($user['created_at']); ?></td>

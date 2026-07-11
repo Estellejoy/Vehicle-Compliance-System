@@ -184,7 +184,12 @@ function vcs_has_table(PDO $pdo, string $table): bool
 
     if (!array_key_exists($table, $cache)) {
         try {
-            $stmt = $pdo->prepare('SHOW TABLES LIKE :table_name');
+            $stmt = $pdo->prepare(
+                'SELECT COUNT(*)
+                 FROM information_schema.tables
+                 WHERE table_schema = DATABASE()
+                   AND table_name = :table_name'
+            );
             $stmt->execute(['table_name' => $table]);
             $cache[$table] = (bool) $stmt->fetchColumn();
         } catch (PDOException $e) {

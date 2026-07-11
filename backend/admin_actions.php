@@ -7,6 +7,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
 }
 
 require_once '../config/db.php';
+require_once __DIR__ . '/password_reset_service.php';
 
 function admin_flash(string $type, string $message, array $extra = []): void
 {
@@ -119,7 +120,7 @@ try {
         redirect_admin();
     }
 
-    if ($targetUserId === $currentAdminId && in_array($action, ['toggle_status', 'delete_user', 'update_role', 'reset_password'], true)) {
+    if ($targetUserId === $currentAdminId && in_array($action, ['toggle_status', 'delete_user', 'update_role', 'reset_password', 'send_reset_link'], true)) {
         admin_flash('warning', 'You cannot change your own account from this screen.');
         redirect_admin();
     }
@@ -230,17 +231,19 @@ try {
         $newPassword = (string) ($_POST['new_password'] ?? '');
         $confirmPassword = (string) ($_POST['confirm_password'] ?? '');
 
-        if ($newPassword === '') {
-            $newPassword = 'Temp@' . strtoupper(bin2hex(random_bytes(3)));
-        }
-
-        if (strlen($newPassword) < 8) {
-            admin_flash('warning', 'Use at least 8 characters for the new password.');
+        if ($newPassword === '' || $confirmPassword === '') {
+            admin_flash('warning', 'Enter a new password and confirm it, or use Send Reset Link.');
             redirect_admin();
         }
 
         if ($confirmPassword !== '' && !hash_equals($newPassword, $confirmPassword)) {
             admin_flash('warning', 'Password confirmation does not match.');
+            redirect_admin();
+        }
+
+        $strengthErrors = vcs_validate_password_strength($newPassword);
+        if ($strengthErrors) {
+            admin_flash('warning', $strengthErrors[0]);
             redirect_admin();
         }
 
@@ -261,9 +264,36 @@ try {
         redirect_admin();
     }
 
+    if ($action === 'send_reset_link') {
+        $target = $pdo->prepare('SELECT user_id, name, email FROM users WHERE user_id = :user_id LIMIT 1');
+        $target->execute(['user_id' => $targetUserId]);
+        $user = $target->fetch();
+
+        if (!$user) {
+            admin_flash('warning', 'That account could not be found.');
+            redirect_admin();
+        }
+
+        if (empty($user['email']) || !filter_var($user['email'], FILTER_VALIDATE_EMAIL)) {
+            admin_flash('warning', 'That account does not have a valid email address for password reset.');
+            redirect_admin();
+        }
+
+        $request = vcs_send_password_reset_link($pdo, $user);
+
+        admin_flash(
+            $request['mail_sent'] ? 'success' : 'warning',
+            $request['mail_sent']
+                ? 'Password reset link sent to the user.'
+                : 'Password reset link prepared, but email delivery is not configured on this server.',
+            $request['mail_sent'] ? [] : ['reset_link' => $request['reset_link']]
+        );
+        redirect_admin();
+    }
+
     admin_flash('warning', 'Unknown admin action.');
     redirect_admin();
-} catch (PDOException $e) {
+} catch (Throwable $e) {
     error_log($e->getMessage());
     admin_flash('danger', 'Database error while updating the account.');
     redirect_admin();
