@@ -135,12 +135,19 @@ CREATE TABLE IF NOT EXISTS login_verification_tokens (
 CREATE TABLE IF NOT EXISTS notifications (
     notification_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
+    vehicle_id INT NULL,
     notification_type VARCHAR(50) NOT NULL,
+    event_code VARCHAR(100) NULL,
+    event_date DATE NULL,
     message VARCHAR(255) NOT NULL,
     status VARCHAR(20) NOT NULL,
     date_sent DATE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_notifications_user_event (user_id, event_code, vehicle_id, event_date),
     CONSTRAINT fk_notifications_user
         FOREIGN KEY (user_id) REFERENCES users(user_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_notifications_vehicle
+        FOREIGN KEY (vehicle_id) REFERENCES vehicles(vehicle_id)
         ON DELETE CASCADE
 );

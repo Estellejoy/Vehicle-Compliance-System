@@ -41,6 +41,45 @@ function sendPasswordResetEmail(string $toEmail, string $toName, string $resetLi
     return sendMailMessage($toEmail, $toName, $subject, $htmlBody, $textBody);
 }
 
+function sendVehicleExpiryReminderEmail(
+    string $toEmail,
+    string $toName,
+    string $plateNumber,
+    string $expiryType,
+    string $expiryDate,
+    int $daysRemaining
+): bool {
+    $safeType = strtolower(trim($expiryType)) === 'licence' ? 'driving licence' : 'insurance';
+    $subject = 'Vehicle compliance reminder for ' . $plateNumber;
+    $htmlBody = buildVehicleExpiryReminderHtml($toName, $plateNumber, $safeType, $expiryDate, $daysRemaining);
+    $textBody = buildVehicleExpiryReminderText($toName, $plateNumber, $safeType, $expiryDate, $daysRemaining);
+
+    return sendMailMessage($toEmail, $toName, $subject, $htmlBody, $textBody);
+}
+
+function sendVehicleInspectionStatusEmail(
+    string $toEmail,
+    string $toName,
+    string $plateNumber,
+    string $inspectionStatus,
+    string $checkedAt,
+    string $checkedBy = ''
+): bool {
+    $subject = 'Inspection status updated for ' . $plateNumber;
+    $htmlBody = buildVehicleInspectionStatusHtml($toName, $plateNumber, $inspectionStatus, $checkedAt, $checkedBy);
+    $textBody = buildVehicleInspectionStatusText($toName, $plateNumber, $inspectionStatus, $checkedAt, $checkedBy);
+
+    return sendMailMessage($toEmail, $toName, $subject, $htmlBody, $textBody);
+}
+
+function sendExceptionAlertEmail(string $toEmail, string $toName, string $subject, string $details): bool
+{
+    $htmlBody = buildExceptionAlertHtml($toName, $subject, $details);
+    $textBody = buildExceptionAlertText($toName, $subject, $details);
+
+    return sendMailMessage($toEmail, $toName, $subject, $htmlBody, $textBody);
+}
+
 function sendMailMessage(string $toEmail, string $toName, string $subject, string $htmlBody, string $textBody): bool
 {
     $host = trim((string) (getenv('MAIL_HOST') ?: ''));
@@ -101,7 +140,7 @@ function sendMailMessage(string $toEmail, string $toName, string $subject, strin
 
         return $mailer->send();
     } catch (Throwable $e) {
-        error_log('Verification email failed: ' . $e->getMessage());
+        error_log('Email send failed: ' . $e->getMessage());
         return false;
     }
 }
@@ -190,4 +229,97 @@ function buildTestText(string $toName): string
     return "Hello {$toName},\n\n"
         . "This is a test email from Vehicle Compliance System.\n"
         . "If you received this message, the SMTP configuration is working.";
+}
+
+function buildVehicleExpiryReminderHtml(
+    string $toName,
+    string $plateNumber,
+    string $expiryType,
+    string $expiryDate,
+    int $daysRemaining
+): string {
+    $safeName = htmlspecialchars($toName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $safePlate = htmlspecialchars($plateNumber, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $safeType = htmlspecialchars($expiryType, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $safeDate = htmlspecialchars($expiryDate, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+    return <<<HTML
+<p>Hello {$safeName},</p>
+<p>This is a reminder that your {$safeType} for vehicle {$safePlate} expires in {$daysRemaining} days.</p>
+<p><strong>Expiry date:</strong> {$safeDate}</p>
+<p>Please renew it before the expiry date to stay compliant.</p>
+HTML;
+}
+
+function buildVehicleExpiryReminderText(
+    string $toName,
+    string $plateNumber,
+    string $expiryType,
+    string $expiryDate,
+    int $daysRemaining
+): string {
+    return "Hello {$toName},\n\n"
+        . "This is a reminder that your {$expiryType} for vehicle {$plateNumber} expires in {$daysRemaining} days.\n"
+        . "Expiry date: {$expiryDate}\n\n"
+        . "Please renew it before the expiry date to stay compliant.";
+}
+
+function buildVehicleInspectionStatusHtml(
+    string $toName,
+    string $plateNumber,
+    string $inspectionStatus,
+    string $checkedAt,
+    string $checkedBy = ''
+): string {
+    $safeName = htmlspecialchars($toName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $safePlate = htmlspecialchars($plateNumber, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $safeStatus = htmlspecialchars($inspectionStatus, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $safeCheckedAt = htmlspecialchars($checkedAt, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $safeCheckedBy = htmlspecialchars($checkedBy, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+    $inspectorLine = $safeCheckedBy !== '' ? "<p><strong>Checked by:</strong> {$safeCheckedBy}</p>" : '';
+
+    return <<<HTML
+<p>Hello {$safeName},</p>
+<p>Your vehicle {$safePlate} inspection status has been updated to <strong>{$safeStatus}</strong>.</p>
+<p><strong>Checked at:</strong> {$safeCheckedAt}</p>
+{$inspectorLine}
+<p>You can sign in to review the latest compliance details.</p>
+HTML;
+}
+
+function buildVehicleInspectionStatusText(
+    string $toName,
+    string $plateNumber,
+    string $inspectionStatus,
+    string $checkedAt,
+    string $checkedBy = ''
+): string {
+    $message = "Hello {$toName},\n\n"
+        . "Your vehicle {$plateNumber} inspection status has been updated to {$inspectionStatus}.\n"
+        . "Checked at: {$checkedAt}\n";
+
+    if ($checkedBy !== '') {
+        $message .= "Checked by: {$checkedBy}\n";
+    }
+
+    return $message . "\nYou can sign in to review the latest compliance details.";
+}
+
+function buildExceptionAlertHtml(string $toName, string $subject, string $details): string
+{
+    $safeName = htmlspecialchars($toName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $safeSubject = htmlspecialchars($subject, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $safeDetails = nl2br(htmlspecialchars($details, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+
+    return <<<HTML
+<p>Hello {$safeName},</p>
+<p><strong>{$safeSubject}</strong></p>
+<p>{$safeDetails}</p>
+HTML;
+}
+
+function buildExceptionAlertText(string $toName, string $subject, string $details): string
+{
+    return "Hello {$toName},\n\n{$subject}\n\n{$details}";
 }

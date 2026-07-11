@@ -665,31 +665,43 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO notifications (
     notification_id,
     user_id,
+    vehicle_id,
     notification_type,
+    event_code,
+    event_date,
     message,
     status,
     date_sent
 )
 VALUES
-(
-    41,
-    54,
-    'Inspection',
-    'Your vehicle KDH 201A has been inspected by officer OFF-0055.',
-    'Unread',
-    CURDATE()
-),
-(
-    42,
-    55,
-    'Assignment',
-    'Inspection data has been seeded for Joy Gatiti.',
-    'Unread',
-    CURDATE()
-)
+    (
+        41,
+        54,
+        101,
+        'Inspection Status',
+        CONCAT('inspection_status_update:101:', CURDATE()),
+        CURDATE(),
+        'Your vehicle KDH 201A has been inspected by officer OFF-0055.',
+        'Unread',
+        CURDATE()
+    ),
+    (
+        42,
+        55,
+        NULL,
+        'Assignment',
+        NULL,
+        NULL,
+        'Inspection data has been seeded for Joy Gatiti.',
+        'Unread',
+        CURDATE()
+    )
 ON DUPLICATE KEY UPDATE
     user_id = VALUES(user_id),
+    vehicle_id = VALUES(vehicle_id),
     notification_type = VALUES(notification_type),
+    event_code = VALUES(event_code),
+    event_date = VALUES(event_date),
     message = VALUES(message),
     status = VALUES(status),
     date_sent = VALUES(date_sent);
