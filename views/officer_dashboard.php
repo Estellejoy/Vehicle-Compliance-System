@@ -35,6 +35,15 @@ function inspectionBadgeClass($status)
 }
 
 $plateNumber = trim($_POST['plate_number'] ?? $_GET['plate_number'] ?? '');
+$lastPlateNumber = trim($_SESSION['officer_last_plate_number'] ?? '');
+$preservePlateOnReturn = isset($_GET['updated']) || isset($_GET['error']);
+$searchRequested = $_SERVER['REQUEST_METHOD'] === 'POST' || $plateNumber !== '';
+
+if ($plateNumber !== '') {
+    $_SESSION['officer_last_plate_number'] = $plateNumber;
+} elseif ($preservePlateOnReturn && $lastPlateNumber !== '') {
+    $plateNumber = $lastPlateNumber;
+}
 $vehicle = null;
 $message = null;
 $messageType = 'info';
@@ -61,7 +70,7 @@ try {
     error_log($e->getMessage());
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' || $plateNumber !== '') {
+if ($searchRequested || $plateNumber !== '') {
 
     if ($plateNumber === '') {
         $message = 'Enter a plate number to look up a record.';

@@ -17,18 +17,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $vehicleId = (int) ($_POST['vehicle_id'] ?? 0);
 $plateNumber = trim($_POST['plate_number'] ?? '');
-$action = trim($_POST['action'] ?? '');
+$action = trim($_POST['action'] ?? 'mark_inspected');
 $checkedBy = (int) ($_SESSION['user_id'] ?? 0);
 
-if ($vehicleId <= 0 || $action !== 'mark_inspected') {
-    header('Location: ../views/officer_dashboard.php?error=invalid_request');
-    exit;
+if ($plateNumber === '' && !empty($_SESSION['officer_last_plate_number'])) {
+    $plateNumber = trim((string) $_SESSION['officer_last_plate_number']);
 }
 
 function vcs_redirect_officer_dashboard(array $params = []): void
 {
     $query = http_build_query(array_filter($params, static fn ($value) => $value !== ''));
-    $url = '../views/officer_dashboard.php';
+    $url = '/views/officer_dashboard.php';
     if ($query !== '') {
         $url .= '?' . $query;
     }
@@ -38,6 +37,22 @@ function vcs_redirect_officer_dashboard(array $params = []): void
 }
 
 try {
+    if ($vehicleId <= 0 && $plateNumber !== '') {
+        $lookup = $pdo->prepare(
+            "SELECT vehicle_id
+             FROM vehicles
+             WHERE REPLACE(UPPER(plate_number), ' ', '') = REPLACE(UPPER(:plate_number), ' ', '')
+             LIMIT 1"
+        );
+        $lookup->execute(['plate_number' => $plateNumber]);
+        $vehicleId = (int) ($lookup->fetchColumn() ?: 0);
+    }
+
+    if ($vehicleId <= 0 || $action !== 'mark_inspected') {
+        header('Location: /views/officer_dashboard.php?error=invalid_request');
+        exit;
+    }
+
     $statusColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_status'")->fetch();
     $checkedAtColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_checked_at'")->fetch();
     $checkedByColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_checked_by'")->fetch();
@@ -77,6 +92,8 @@ try {
     if (!$vehicle) {
         throw new RuntimeException('Vehicle not found.');
     }
+
+    $_SESSION['officer_last_plate_number'] = (string) ($vehicle['plate_number'] ?? $plateNumber);
 
     $checkedAt = vcs_notification_timestamp();
     $previousStatus = trim((string) ($vehicle['inspection_status'] ?? ''));
