@@ -5,8 +5,23 @@ require_once '../config/db.php';
 require_once __DIR__ . '/auth_helpers.php';
 require_once __DIR__ . '/../config/mail.php';
 
-function flash_register(array $payload): void
+function register_wants_json(): bool
 {
+    $requestedWith = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
+    $accept = strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
+
+    return $requestedWith === 'xmlhttprequest' || str_contains($accept, 'application/json');
+}
+
+function register_respond(array $payload, int $statusCode = 200): void
+{
+    if (register_wants_json()) {
+        http_response_code($statusCode);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($payload);
+        exit;
+    }
+
     $_SESSION['register_flash'] = $payload;
     header('Location: /register');
     exit;
@@ -23,41 +38,41 @@ $password = (string) ($_POST['password'] ?? '');
 $confirmPassword = (string) ($_POST['confirm_password'] ?? '');
 
 if ($name === '' || $email === '' || $password === '' || $confirmPassword === '') {
-    flash_register([
+    register_respond([
         'type' => 'danger',
         'message' => 'All fields are required.',
-    ]);
+    ], 422);
 }
 
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    flash_register([
+    register_respond([
         'type' => 'danger',
         'message' => 'Enter a valid email address.',
-    ]);
+    ], 422);
 }
 
 if ($password !== $confirmPassword) {
-    flash_register([
+    register_respond([
         'type' => 'danger',
         'message' => 'Passwords do not match.',
-    ]);
+    ], 422);
 }
 
 foreach (vcs_validate_password_strength($password) as $passwordError) {
-    flash_register([
+    register_respond([
         'type' => 'danger',
         'message' => $passwordError,
-    ]);
+    ], 422);
 }
 
 try {
     $stmt = $pdo->prepare('SELECT user_id FROM users WHERE email = :email LIMIT 1');
     $stmt->execute(['email' => $email]);
     if ($stmt->fetch()) {
-        flash_register([
+        register_respond([
             'type' => 'warning',
             'message' => 'An account already exists for that email address.',
-        ]);
+        ], 409);
     }
 
     $token = bin2hex(random_bytes(32));
@@ -115,19 +130,26 @@ try {
         ? 'Registration successful. Check your email for the verification link.'
         : 'Registration successful, but email delivery is not configured on this server. Use the verification link below.';
 
-    $_SESSION['register_flash'] = [
+    $response = [
         'type' => 'success',
         'message' => $message,
         'verification_link' => $verifyLink,
         'email_sent' => $mailSent,
     ];
 
+    if (register_wants_json()) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($response);
+        exit;
+    }
+
+    $_SESSION['register_flash'] = $response;
     header('Location: /register');
     exit;
 } catch (PDOException $e) {
     error_log($e->getMessage());
-    flash_register([
+    register_respond([
         'type' => 'danger',
         'message' => 'Database error while creating the account.',
-    ]);
+    ], 500);
 }

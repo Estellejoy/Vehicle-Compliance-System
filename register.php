@@ -72,7 +72,9 @@ unset($_SESSION['register_flash']);
                                 </div>
                             <?php endif; ?>
 
-                            <form action="backend/register.php" method="POST" class="login-form">
+                            <div id="registerFeedback" class="mb-4"></div>
+
+                            <form action="backend/register.php" method="POST" class="login-form" id="registerForm" novalidate>
                                 <div class="mb-3">
                                     <label for="name" class="form-label fw-semibold text-secondary">Full Name</label>
                                     <input type="text" id="name" name="name" class="form-control form-control-lg" placeholder="Joy Gatiti" required>
@@ -85,13 +87,20 @@ unset($_SESSION['register_flash']);
 
                                 <div class="mb-3">
                                     <label for="password" class="form-label fw-semibold text-secondary">Password</label>
-                                    <input type="password" id="password" name="password" class="form-control form-control-lg" placeholder="Create a password" minlength="10" required>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text bg-white"><i class="bi bi-lock text-success"></i></span>
+                                        <input type="password" id="password" name="password" class="form-control" placeholder="Create a password" minlength="10" required>
+                                    </div>
                                     <div class="form-text">Use 10+ characters with upper, lower, number, and special characters.</div>
                                 </div>
 
                                 <div class="mb-4">
                                     <label for="confirm_password" class="form-label fw-semibold text-secondary">Confirm Password</label>
-                                    <input type="password" id="confirm_password" name="confirm_password" class="form-control form-control-lg" placeholder="Repeat password" minlength="10" required>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text bg-white"><i class="bi bi-lock text-success"></i></span>
+                                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Repeat password" minlength="10" required>
+                                        <span class="input-group-text bg-white text-success" id="passwordMatchIndicator" aria-live="polite"></span>
+                                    </div>
                                 </div>
 
                                 <button type="submit" class="btn btn-success btn-lg w-100 fw-semibold">
@@ -111,5 +120,135 @@ unset($_SESSION['register_flash']);
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function () {
+            const passwordInput = document.getElementById('password');
+            const confirmInput = document.getElementById('confirm_password');
+            const matchIndicator = document.getElementById('passwordMatchIndicator');
+            const form = document.getElementById('registerForm');
+            const feedback = document.getElementById('registerFeedback');
+            const submitButton = form ? form.querySelector('button[type="submit"]') : null;
+
+            if (!passwordInput || !confirmInput || !matchIndicator) {
+                return;
+            }
+
+            const clearFeedback = () => {
+                if (feedback) {
+                    feedback.innerHTML = '';
+                }
+            };
+
+            const showFeedback = (type, message, extraHtml = '') => {
+                if (!feedback) {
+                    return;
+                }
+
+                const variantClass = type === 'success'
+                    ? 'bg-success-subtle text-success border-success-subtle'
+                    : type === 'warning'
+                        ? 'bg-warning-subtle text-warning border-warning-subtle'
+                        : 'bg-danger-subtle text-danger border-danger-subtle';
+
+                feedback.innerHTML = `
+                    <div class="border rounded-4 p-3 ${variantClass}">
+                        <div class="d-flex align-items-start justify-content-between gap-3">
+                            <div class="fw-semibold">${message}</div>
+                            <button type="button" class="btn-close" aria-label="Close"></button>
+                        </div>
+                        ${extraHtml ? `<div class="mt-2">${extraHtml}</div>` : ''}
+                    </div>
+                `;
+
+                const closeButton = feedback.querySelector('.btn-close');
+                if (closeButton) {
+                    closeButton.addEventListener('click', clearFeedback);
+                }
+            };
+
+            const updateMatchIndicator = () => {
+                const password = passwordInput.value;
+                const confirmPassword = confirmInput.value;
+                const hasValue = password.length > 0 && confirmPassword.length > 0;
+                const isMatch = hasValue && password === confirmPassword;
+
+                if (isMatch) {
+                    matchIndicator.innerHTML = '<i class="bi bi-check-lg fs-5"></i>';
+                    matchIndicator.classList.remove('text-danger');
+                    matchIndicator.classList.add('text-success');
+                    matchIndicator.setAttribute('aria-label', 'Passwords match');
+                    return;
+                }
+
+                matchIndicator.innerHTML = '';
+                matchIndicator.setAttribute('aria-label', 'Passwords do not match');
+            };
+
+            [passwordInput, confirmInput, document.getElementById('name'), document.getElementById('email')].forEach((field) => {
+                if (!field) {
+                    return;
+                }
+
+                field.addEventListener('input', () => {
+                    updateMatchIndicator();
+                    clearFeedback();
+                });
+            });
+
+            if (form) {
+                form.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    clearFeedback();
+
+                    const password = passwordInput.value;
+                    const confirmPassword = confirmInput.value;
+
+                    if (password !== confirmPassword) {
+                        showFeedback('danger', 'Passwords do not match.');
+                        return;
+                    }
+
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                    }
+
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            body: new FormData(form),
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                            },
+                        });
+
+                        const data = await response.json().catch(() => null);
+                        const message = data?.message || 'Something went wrong.';
+
+                        if (!response.ok) {
+                            showFeedback(data?.type || 'danger', message);
+                            return;
+                        }
+
+                        const extraHtml = data?.verification_link
+                            ? `<a class="link-success fw-semibold text-decoration-none" href="${data.verification_link}">Open verification link</a>`
+                            : '';
+
+                        showFeedback(data?.type || 'success', message, extraHtml);
+                        form.reset();
+                        updateMatchIndicator();
+                    } catch (error) {
+                        showFeedback('danger', 'Database error while creating the account.');
+                    } finally {
+                        if (submitButton) {
+                            submitButton.disabled = false;
+                        }
+                    }
+                });
+            }
+
+            updateMatchIndicator();
+        })();
+    </script>
 </body>
 </html>

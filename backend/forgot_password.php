@@ -3,6 +3,7 @@ session_start();
 
 require_once '../config/db.php';
 require_once __DIR__ . '/auth_helpers.php';
+require_once __DIR__ . '/../config/mail.php';
 
 function flash_forgot(array $payload): void
 {
@@ -66,19 +67,7 @@ try {
     $appUrl = rtrim(getenv('APP_URL') ?: 'http://localhost:8080', '/');
     $resetLink = $appUrl . '/reset-password?token=' . urlencode($token);
 
-    $fromAddress = getenv('MAIL_FROM_ADDRESS') ?: 'no-reply@localhost';
-    $fromName = getenv('MAIL_FROM_NAME') ?: 'Vehicle Compliance System';
-    $subject = 'Reset your Vehicle Compliance System password';
-    $body = "Hello {$user['name']},\n\n";
-    $body .= "Use the link below to set a new password. This link expires in 1 hour:\n{$resetLink}\n\n";
-    $body .= "If you did not request this, you can ignore this message.";
-    $headers = [
-        'From: ' . $fromName . ' <' . $fromAddress . '>',
-        'Reply-To: ' . $fromAddress,
-        'Content-Type: text/plain; charset=UTF-8',
-    ];
-
-    $mailSent = @mail($user['email'], $subject, $body, implode("\r\n", $headers));
+    $mailSent = sendPasswordResetEmail($user['email'], $user['name'], $resetLink);
 
     flash_forgot([
         'type' => 'success',

@@ -5,6 +5,7 @@ session_start();
 // 1. Import database connection
 require_once '../config/db.php';
 require_once __DIR__ . '/auth_helpers.php';
+require_once __DIR__ . '/../config/mail.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim((string)($_POST['username'] ?? ''));
@@ -74,6 +75,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!in_array($selectedRole, $availableRoles, true)) {
                 header("Location: /login?error=That role is not assigned to this email address.");
+                exit;
+            }
+
+            if (vcs_login_verification_required($user)) {
+                $verification = vcs_create_login_verification_token($pdo, (int) $user['user_id'], $selectedRole);
+                $appUrl = rtrim(getenv('APP_URL') ?: 'http://localhost:8080', '/');
+                $verifyPageUrl = $appUrl . '/verify_login.php';
+                $mailSent = sendLoginVerificationEmail($user['email'], $user['name'], $verification['code'], $verifyPageUrl);
+
+                $_SESSION['pending_login_verification'] = [
+                    'token_id' => $verification['token_id'],
+                    'user_id' => (int) $user['user_id'],
+                    'selected_role' => $selectedRole,
+                    'available_roles' => $availableRoles,
+                    'email' => $user['email'],
+                    'name' => $user['name'],
+                    'expires_at' => $verification['expires_at'],
+                ];
+
+                $_SESSION['flash_message'] = $mailSent
+                    ? 'A verification code has been sent to your email. Enter it on the next screen.'
+                    : 'Verification code could not be emailed on this server.';
+                $_SESSION['flash_type'] = $mailSent ? 'warning' : 'danger';
+                if (!$mailSent) {
+                    $_SESSION['flash_code'] = $verification['code'];
+                }
+
+                header('Location: /verify_login.php');
                 exit;
             }
 

@@ -123,6 +123,9 @@ try {
                         <span class="badge bg-success-subtle text-success border border-success border-opacity-25 ms-2"><?php echo h($_SESSION['staff_id']); ?></span>
                     <?php endif; ?>
                 </span>
+                <a href="/views/citizen_portal.php" class="btn btn-light btn-sm text-success">
+                            <i class="bi bi-speedometer2"></i> Citizen Portal
+                        </a>
                 <a href="/views/change_password.php" class="btn btn-outline-success btn-sm">
                     <i class="bi bi-key me-1"></i> Change Password
                 </a>

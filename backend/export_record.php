@@ -11,6 +11,7 @@ require_once '../config/db.php';
 
 $vehicleId = (int) ($_GET['vehicle_id'] ?? 0);
 $usersStaffIdEnabled = false;
+$vehicle = null;
 
 if ($vehicleId <= 0) {
     header('Location: ' . ($role === 'officer' ? '/views/officer_dashboard.php' : '/views/citizen_portal.php'));
@@ -71,57 +72,175 @@ try {
         header('Location: ' . ($role === 'officer' ? '/views/officer_dashboard.php' : '/views/citizen_portal.php'));
         exit;
     }
-
-    $filename = preg_replace('/[^A-Za-z0-9_-]+/', '_', (string) $vehicle['plate_number']);
-    $filename = trim($filename, '_');
-    if ($filename === '') {
-        $filename = 'vehicle_' . $vehicleId;
-    }
-    $filename .= '_record.csv';
-
-    header('Content-Type: text/csv; charset=UTF-8');
-    header('Content-Disposition: attachment; filename="' . $filename . '"');
-
-    $output = fopen('php://output', 'wb');
-    fputcsv($output, ['Field', 'Value']);
-
-    $rows = [
-        ['Vehicle ID', $vehicle['vehicle_id']],
-        ['Plate Number', $vehicle['plate_number']],
-        ['Make', $vehicle['make']],
-        ['Model', $vehicle['model']],
-        ['Year', $vehicle['year']],
-        ['Owner Name', $vehicle['owner_name']],
-        ['Owner Email', $vehicle['owner_email']],
-        ['Owner Role', $vehicle['owner_role']],
-        ['Insurance Status', $vehicle['insurance_status'] ?? 'N/A'],
-        ['Insurance Expiry', $vehicle['insurance_expiry'] ?? 'N/A'],
-        ['Licence Status', $vehicle['licence_status'] ?? 'N/A'],
-        ['Licence Expiry', $vehicle['licence_expiry'] ?? 'N/A'],
-        ['Registration Status', $vehicle['registration_status'] ?? 'N/A'],
-        ['Registration Expiry', $vehicle['registration_expiry'] ?? 'N/A'],
-        ['Inspection Status', $vehicle['inspection_status'] ?? 'Pending Police Check'],
-        ['Inspection Checked At', $vehicle['inspection_checked_at'] ?? 'N/A'],
-        ['Inspection Checked By', $vehicle['inspection_checked_by_name'] ?? 'Officer not recorded'],
-        ['Inspector / Officer Staff ID', $vehicle['inspection_checked_by_staff_id'] ?? 'N/A'],
-        ['Service Details', $vehicle['service_details'] ?? 'N/A'],
-        ['Service Report Name', $vehicle['service_report_name'] ?? 'N/A'],
-        ['Service Report Path', $vehicle['service_report_path'] ?? 'N/A'],
-        ['Last Service Date', $vehicle['last_service_date'] ?? 'N/A'],
-        ['Next Service Date', $vehicle['next_service_date'] ?? 'N/A'],
-        ['Service Uploaded By', $vehicle['service_uploaded_by_name'] ?? 'N/A'],
-        ['Service Uploaded By Staff ID', $vehicle['service_uploaded_by_staff_id'] ?? 'N/A'],
-        ['Service Uploaded At', $vehicle['uploaded_at'] ?? 'N/A'],
-    ];
-
-    foreach ($rows as $row) {
-        fputcsv($output, $row);
-    }
-
-    fclose($output);
-    exit;
 } catch (PDOException $e) {
     error_log($e->getMessage());
     header('Location: ' . ($role === 'officer' ? '/views/officer_dashboard.php' : '/views/citizen_portal.php'));
     exit;
 }
+
+function h($value): string
+{
+    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Report - VCS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f5f7f9;
+        }
+        .report-shell {
+            max-width: 1100px;
+        }
+        .report-card {
+            border: 1px solid rgba(0,0,0,.08);
+            border-radius: 1rem;
+            background: #fff;
+            box-shadow: 0 12px 30px rgba(0,0,0,.06);
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: #fff;
+            }
+            .report-card {
+                box-shadow: none;
+                border: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container report-shell py-4 py-md-5">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 no-print">
+            <div>
+                <div class="text-uppercase text-success fw-semibold small">Vehicle Compliance System</div>
+                <h1 class="h3 fw-bold mb-0">Vehicle Report</h1>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="<?php echo h($role === 'officer' ? '/views/officer_dashboard.php' : '/views/citizen_portal.php'); ?>" class="btn btn-outline-secondary">
+                    Back
+                </a>
+                <button type="button" class="btn btn-success" onclick="window.print()">
+                    <i class="bi bi-printer me-1"></i> Print
+                </button>
+            </div>
+        </div>
+
+        <div class="report-card p-4 p-md-5">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="text-uppercase text-secondary small fw-semibold">Vehicle</div>
+                    <h2 class="h4 fw-bold mt-2 mb-1"><?php echo h($vehicle['plate_number']); ?></h2>
+                    <div class="text-secondary"><?php echo h($vehicle['make']); ?> <?php echo h($vehicle['model']); ?></div>
+                    <hr>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="text-secondary small">Year</div>
+                            <div class="fw-semibold"><?php echo h($vehicle['year']); ?></div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="text-secondary small">Vehicle ID</div>
+                            <div class="fw-semibold"><?php echo h($vehicle['vehicle_id']); ?></div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="text-secondary small">Owner</div>
+                            <div class="fw-semibold"><?php echo h($vehicle['owner_name']); ?></div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="text-secondary small">Owner Email</div>
+                            <div class="fw-semibold"><?php echo h($vehicle['owner_email']); ?></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="text-uppercase text-secondary small fw-semibold">Inspection</div>
+                    <div class="mt-2 d-flex flex-wrap gap-2">
+                        <span class="badge bg-success px-3 py-2">Status: <?php echo h($vehicle['inspection_status'] ?? 'Pending Police Check'); ?></span>
+                    </div>
+                    <hr>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="text-secondary small">Checked At</div>
+                            <div class="fw-semibold"><?php echo h($vehicle['inspection_checked_at'] ?? 'N/A'); ?></div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="text-secondary small">Checked By</div>
+                            <div class="fw-semibold"><?php echo h($vehicle['inspection_checked_by_name'] ?? 'Officer not recorded'); ?></div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="text-secondary small">Officer Badge</div>
+                            <div class="fw-semibold"><?php echo h($vehicle['inspection_checked_by_staff_id'] ?? 'N/A'); ?></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="text-uppercase text-secondary small fw-semibold">Compliance</div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-4">
+                            <div class="border rounded-3 p-3 h-100">
+                                <div class="text-secondary small">Insurance</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['insurance_status'] ?? 'N/A'); ?></div>
+                                <div class="text-secondary small mt-2">Expiry</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['insurance_expiry'] ?? 'N/A'); ?></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded-3 p-3 h-100">
+                                <div class="text-secondary small">Licence</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['licence_status'] ?? 'N/A'); ?></div>
+                                <div class="text-secondary small mt-2">Expiry</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['licence_expiry'] ?? 'N/A'); ?></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded-3 p-3 h-100">
+                                <div class="text-secondary small">Registration</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['registration_status'] ?? 'N/A'); ?></div>
+                                <div class="text-secondary small mt-2">Expiry</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['registration_expiry'] ?? 'N/A'); ?></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="text-uppercase text-secondary small fw-semibold">Service</div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3 h-100">
+                                <div class="text-secondary small">Service Details</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['service_details'] ?? 'N/A'); ?></div>
+                                <div class="text-secondary small mt-2">Last Service Date</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['last_service_date'] ?? 'N/A'); ?></div>
+                                <div class="text-secondary small mt-2">Next Service Date</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['next_service_date'] ?? 'N/A'); ?></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3 h-100">
+                                <div class="text-secondary small">Uploaded By</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['service_uploaded_by_name'] ?? 'N/A'); ?></div>
+                                <div class="text-secondary small mt-2">Officer Badge</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['service_uploaded_by_staff_id'] ?? 'N/A'); ?></div>
+                                <div class="text-secondary small mt-2">Uploaded At</div>
+                                <div class="fw-semibold"><?php echo h($vehicle['uploaded_at'] ?? 'N/A'); ?></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

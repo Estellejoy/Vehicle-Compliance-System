@@ -1,3 +1,9 @@
+<?php
+session_start();
+
+$feedbackFlash = $_SESSION['feedback_flash'] ?? null;
+unset($_SESSION['feedback_flash']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,8 +46,8 @@
                         <h1 class="display-5 fw-bold text-white mt-3">
                             Track and Manage Vehicle Compliance in Real Time.
                         </h1>
-                        <p class="lead text-white-75 mt-3 mb-4">
-                            VCS is a web-based platform that streamlines vehicle compliance in Kenya - connecting Traffic Enforcement Officers, Vehicle Owners, and System Administrators on one secure system to verify, track, and manage vehicle compliance records in real time.
+                        <p class="lead text-white mt-3 mb-4 bg-dark bg-opacity-50 px-3 py-3 rounded-3 d-inline-block" style="max-width: 46rem;">
+                            VCS is a platform for vehicle owners, traffic officers, and administrators to verify compliance records, track inspections, and manage vehicle data in one place.
                         </p>
                         <div class="hero-meta d-flex flex-wrap gap-3 gap-lg-4">
                             <div class="hero-chip">
@@ -134,6 +140,74 @@
                             <div class="value-icon bg-success-subtle text-success"><i class="bi bi-universal-access"></i></div>
                             <h3 class="h5 fw-semibold mt-3">Accessibility</h3>
                             <p class="text-secondary mb-0">A system built to serve every user, regardless of technical skill level.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="feedback" class="feedback-band">
+            <div class="container py-5">
+                <div class="row align-items-center g-4 g-lg-5">
+                    <div class="col-lg-5">
+                        <span class="eyebrow text-white-50 fw-semibold">Feedback</span>
+                        <h2 class="section-title text-white mt-2">Share what you love, what feels clumsy, and what we should improve.</h2>
+                        <p class="text-white-75 mb-4">
+                            We read feedback to make the Vehicle Compliance System clearer, faster, and more useful for owners, officers, and administrators.
+                        </p>
+                        <div class="feedback-metrics row g-3">
+                            <div class="col-6">
+                                <div class="feedback-metric">
+                                    <div class="feedback-metric-value">24/7</div>
+                                    <div class="feedback-metric-label">Open to comments</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="feedback-metric">
+                                    <div class="feedback-metric-value">1 min</div>
+                                    <div class="feedback-metric-label">Quick response form</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <div class="feedback-card shadow-lg">
+                            <?php if ($feedbackFlash): ?>
+                                <div class="alert alert-<?php echo htmlspecialchars($feedbackFlash['type'] ?? 'info'); ?> mb-4" role="alert">
+                                    <?php echo htmlspecialchars($feedbackFlash['message'] ?? ''); ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <form class="row g-3" action="/backend/feedback.php" method="POST">
+                                <div class="col-md-6">
+                                    <label for="feedbackName" class="form-label fw-semibold text-secondary">Your name</label>
+                                    <input type="text" class="form-control form-control-lg" id="feedbackName" name="name" placeholder="Jane Doe" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="feedbackEmail" class="form-label fw-semibold text-secondary">Email address</label>
+                                    <input type="email" class="form-control form-control-lg" id="feedbackEmail" name="email" placeholder="name@example.com" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="feedbackCategory" class="form-label fw-semibold text-secondary">Feedback type</label>
+                                    <select class="form-select form-select-lg" id="feedbackCategory" name="category" required>
+                                        <option value="suggestion" selected>Suggestion</option>
+                                        <option value="issue">Issue</option>
+                                        <option value="compliment">Compliment</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <input type="hidden" name="source_page" value="index.php">
+                                <div class="col-12">
+                                    <label for="feedbackMessage" class="form-label fw-semibold text-secondary">Your message</label>
+                                    <textarea class="form-control form-control-lg" id="feedbackMessage" name="message" rows="5" placeholder="Tell us what would improve your experience..." required></textarea>
+                                </div>
+                                <div class="col-12 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 pt-2">
+                                    <p class="feedback-note mb-0">Feedback is sent directly from this page and saved for review.</p>
+                                    <button type="submit" class="btn btn-success btn-lg px-4 fw-semibold">
+                                        <i class="bi bi-send me-2"></i> Send feedback
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>

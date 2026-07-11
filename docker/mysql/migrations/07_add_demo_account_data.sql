@@ -80,7 +80,7 @@ VALUES
     (
         101,
         101,
-        'Full service and inspection demo record',
+        'Full service and inspection record',
         NULL,
         NULL,
         CURDATE(),
@@ -111,7 +111,7 @@ VALUES
         41,
         54,
         'Inspection',
-        'Your demo vehicle KDH 201A has been inspected by OFF-DEMO-001.',
+        'Your vehicle KDH 201A has been inspected by officer OFF-0055.',
         'Unread',
         CURDATE()
     ),
@@ -119,7 +119,7 @@ VALUES
         42,
         55,
         'Assignment',
-        'Demo inspection data has been seeded for Joy Gatiti.',
+        'Inspection data has been seeded for Joy Gatiti.',
         'Unread',
         CURDATE()
     )

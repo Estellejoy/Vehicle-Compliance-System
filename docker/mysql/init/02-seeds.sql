@@ -549,7 +549,7 @@ ON DUPLICATE KEY UPDATE
 
 INSERT INTO users (user_id, name, email, role, staff_id, password_hash, email_verified_at, email_verification_token_hash, email_verification_expires_at, is_active)
 VALUES
-('55', 'Jemima Moye', 'jemima.moye@strathmore.edu', 'officer', 'OFF-DEMO-001', '$2y$10$6a7IveO.Ql37nUK.H79Kq.5TSQPf8tIKwuevPtJxJdl64gbJlsThy', NOW(), NULL, NULL, 1)
+('55', 'Jemima Moye', 'jemima.moye@strathmore.edu', 'officer', 'OFF-0055', '$2y$10$6a7IveO.Ql37nUK.H79Kq.5TSQPf8tIKwuevPtJxJdl64gbJlsThy', NOW(), NULL, NULL, 1)
 ON DUPLICATE KEY UPDATE
     name = VALUES(name),
     email = VALUES(email),
@@ -644,7 +644,7 @@ VALUES
 (
     101,
     101,
-    'Full service and inspection demo record',
+    'Full service and inspection record',
     NULL,
     NULL,
     CURDATE(),
@@ -675,7 +675,7 @@ VALUES
     41,
     54,
     'Inspection',
-    'Your demo vehicle KDH 201A has been inspected by OFF-DEMO-001.',
+    'Your vehicle KDH 201A has been inspected by officer OFF-0055.',
     'Unread',
     CURDATE()
 ),
@@ -683,7 +683,7 @@ VALUES
     42,
     55,
     'Assignment',
-    'Demo inspection data has been seeded for Joy Gatiti.',
+    'Inspection data has been seeded for Joy Gatiti.',
     'Unread',
     CURDATE()
 )

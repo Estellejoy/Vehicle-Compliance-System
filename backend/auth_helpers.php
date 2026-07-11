@@ -70,6 +70,114 @@ function vcs_dashboard_url_for_role(string $role): string
     };
 }
 
+function vcs_login_verification_required(array $user): bool
+{
+    $email = strtolower(trim((string) ($user['email'] ?? '')));
+    $protectedEmails = [
+        'joy.gatiti@strathmore.edu',
+        'jemima.moye@strathmore.edu',
+    ];
+
+    return in_array($email, $protectedEmails, true);
+}
+
+function vcs_login_verification_expires_at(): string
+{
+    return (new DateTimeImmutable('+15 minutes'))->format('Y-m-d H:i:s');
+}
+
+function vcs_login_verification_code(): string
+{
+    return str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+}
+
+function vcs_create_login_verification_token(PDO $pdo, int $userId, string $selectedRole): array
+{
+    $code = vcs_login_verification_code();
+    $expiresAt = vcs_login_verification_expires_at();
+    $placeholderHash = hash('sha256', random_bytes(32));
+
+    $stmt = $pdo->prepare(
+        'INSERT INTO login_verification_tokens (user_id, selected_role, token_hash, expires_at)
+         VALUES (:user_id, :selected_role, :token_hash, :expires_at)'
+    );
+    $stmt->execute([
+        'user_id' => $userId,
+        'selected_role' => vcs_normalize_role($selectedRole),
+        'token_hash' => $placeholderHash,
+        'expires_at' => $expiresAt,
+    ]);
+
+    $tokenId = (int) $pdo->lastInsertId();
+    $tokenHash = hash('sha256', $tokenId . ':' . $code);
+
+    $update = $pdo->prepare(
+        'UPDATE login_verification_tokens
+         SET token_hash = :token_hash
+         WHERE token_id = :token_id'
+    );
+    $update->execute([
+        'token_hash' => $tokenHash,
+        'token_id' => $tokenId,
+    ]);
+
+    return [
+        'code' => $code,
+        'token_id' => $tokenId,
+        'token_hash' => $tokenHash,
+        'expires_at' => $expiresAt,
+    ];
+}
+
+function vcs_consume_login_verification_token(PDO $pdo, int $tokenId, string $code): ?array
+{
+    $tokenHash = hash('sha256', $tokenId . ':' . trim($code));
+
+    $stmt = $pdo->prepare(
+        "SELECT lvt.token_id, lvt.user_id, lvt.selected_role, lvt.token_hash, lvt.expires_at, lvt.used_at,
+                u.user_id AS user_user_id,
+                u.name,
+                u.email,
+                u.role,
+                u.badge_number,
+                u.staff_id,
+                u.password_hash,
+                u.email_verified_at,
+                u.is_active
+         FROM login_verification_tokens lvt
+         INNER JOIN users u ON u.user_id = lvt.user_id
+         WHERE lvt.token_id = :token_id
+         LIMIT 1"
+    );
+    $stmt->execute(['token_id' => $tokenId]);
+    $row = $stmt->fetch();
+
+    if (!$row) {
+        return null;
+    }
+
+    if (!hash_equals((string) $row['token_hash'], $tokenHash)) {
+        return null;
+    }
+
+    if (!empty($row['used_at']) || strtotime((string) $row['expires_at']) < time()) {
+        return null;
+    }
+
+    $update = $pdo->prepare(
+        'UPDATE login_verification_tokens
+         SET used_at = NOW()
+         WHERE token_id = :token_id AND used_at IS NULL'
+    );
+    $update->execute(['token_id' => $row['token_id']]);
+
+    if ($update->rowCount() !== 1) {
+        return null;
+    }
+
+    return $row;
+}
+
 function vcs_has_table(PDO $pdo, string $table): bool
 {
     static $cache = [];

@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'owner') {
+if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
@@ -10,6 +10,7 @@ require_once '../config/db.php';
 
 $user_id = (int) $_SESSION['user_id'];
 $user_name = $_SESSION['name'] ?? 'Citizen';
+$role = $_SESSION['role'];
 $changePasswordUrl = '/views/change_password.php';
 $logoutUrl = '/backend/logout.php';
 
@@ -37,7 +38,7 @@ function inspectionBadgeClass($status)
 try {
     $usersStaffIdEnabled = (bool) $pdo->query("SHOW COLUMNS FROM users LIKE 'staff_id'")->fetch();
     $stmt = $pdo->prepare(
-        "SELECT v.*, checker.name AS inspection_checked_by_name" . ($usersStaffIdEnabled ? ", checker.staff_id AS inspection_checked_by_staff_id" : "") . "
+        "SELECT v.*, checker.badge_number AS inspection_checked_by_badge" . ($usersStaffIdEnabled ? ", checker.staff_id AS inspection_checked_by_staff_id" : "") . "
          FROM vehicles v
          LEFT JOIN users checker ON checker.user_id = v.inspection_checked_by
          WHERE v.owner_id = :user_id
@@ -114,6 +115,18 @@ try {
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <div class="d-flex align-items-center text-white gap-3">
                     <span class="small"><i class="bi bi-person-circle me-1"></i> <?php echo htmlspecialchars($user_name); ?> (Citizen)</span>
+                    <?php if ($role === 'admin'): ?>
+                        <a href="/views/admin_panel.php" class="btn btn-light btn-sm text-success">
+                            <i class="bi bi-speedometer2"></i> Admin Portal
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($role === 'officer'): ?>
+                        <a href="/views/officer_dashboard.php" class="btn btn-light btn-sm text-success">
+                            <i class="bi bi-speedometer2"></i> Officer Dashboard
+                        </a>
+                    <?php endif; ?>
+
+    
                     <a href="<?php echo htmlspecialchars($changePasswordUrl); ?>" class="btn btn-outline-light btn-sm">
                         <i class="bi bi-key me-1"></i> Change Password
                     </a>
@@ -194,16 +207,13 @@ try {
                 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
                     <div class="card-header bg-white py-3 border-bottom border-light">
                         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                            <h5 class="mb-0 fw-bold text-success"><i class="bi bi-journal-text me-2"></i>My Registered Fleet Records</h5>
+                            <h5 class="mb-0 fw-bold text-success"><i class="bi bi-journal-text me-2"></i>My Registered Records</h5>
                             <div class="d-flex gap-2 no-print">
                                 <?php if ($total_vehicles > 0): ?>
                                     <a href="/backend/export_fleet_report.php" class="btn btn-outline-secondary btn-sm">
-                                        <i class="bi bi-download me-1"></i> Download Fleet Report
+                                        <i class="bi bi-printer me-1"></i> Print Summary
                                     </a>
                                 <?php endif; ?>
-                                <button type="button" class="btn btn-success btn-sm" onclick="window.print()">
-                                    <i class="bi bi-printer me-1"></i> Print List
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -241,12 +251,9 @@ try {
                                                             Not checked yet
                                                         <?php endif; ?>
                                                     </div>
-                                                    <?php if (!empty($vehicle['inspection_checked_by_name'])): ?>
+                                                    <?php if (!empty($vehicle['inspection_checked_by_badge'])): ?>
                                                         <div class="text-muted small">
-                                                            By <?php echo htmlspecialchars($vehicle['inspection_checked_by_name']); ?>
-                                                            <?php if (!empty($vehicle['inspection_checked_by_staff_id'])): ?>
-                                                                (<?php echo htmlspecialchars($vehicle['inspection_checked_by_staff_id']); ?>)
-                                                            <?php endif; ?>
+                                                            By <?php echo htmlspecialchars($vehicle['inspection_checked_by_badge']); ?>
                                                         </div>
                                                     <?php endif; ?>
                                                 </td>
@@ -257,12 +264,16 @@ try {
                                                     >
                                                         <i class="bi bi-eye"></i> Details
                                                     </a>
-                                                    <a
-                                                        class="btn btn-outline-secondary btn-sm fw-semibold ms-2"
-                                                        href="/backend/export_record.php?vehicle_id=<?php echo urlencode((string) $vehicle['vehicle_id']); ?>"
-                                                    >
-                                                        <i class="bi bi-download"></i> Download
-                                                    </a>
+                                                    <?php if (strtolower(trim((string) ($vehicle['inspection_status'] ?? ''))) === 'checked'): ?>
+                                                        <a
+                                                            class="btn btn-outline-secondary btn-sm fw-semibold ms-2"
+                                                            href="/backend/export_record.php?vehicle_id=<?php echo urlencode((string) $vehicle['vehicle_id']); ?>"
+                                                        >
+                                                            <i class="bi bi-printer"></i> View Report
+                                                        </a>
+                                                    <?php else: ?>
+                                                        <span class="text-secondary small ms-2">Report available after inspection</span>
+                                                    <?php endif; ?>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>

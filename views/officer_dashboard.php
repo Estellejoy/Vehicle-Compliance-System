@@ -143,6 +143,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $plateNumber !== '') {
                 <span class="text-secondary small d-none d-md-inline">
                     <i class="bi bi-person-badge me-1 text-success"></i><?php echo h($_SESSION['name'] ?? 'Officer'); ?>
                 </span>
+                <a href="/views/citizen_portal.php" class="btn btn-light btn-sm text-success">
+                            <i class="bi bi-speedometer2"></i> Citizen Portal
+                        </a>
                 <a href="/views/change_password.php" class="btn btn-outline-success btn-sm">
                     <i class="bi bi-key me-1"></i> Change Password
                 </a>

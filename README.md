@@ -65,7 +65,27 @@ Local environment files:
 
 - `.env` contains your machine-specific Compose values and seeded app account details.
 - `.env.example` shows the same keys with placeholder values.
-- `APP_URL`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`, and `MAIL_REPLY_TO_ADDRESS` support the registration email flow.
+- `APP_URL`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`, and `MAIL_REPLY_TO_ADDRESS` support the registration, password reset, and login-verification email flows.
+- The app now loads a root `.env` file automatically if it exists, so local XAMPP or Apache runs can use the same mail settings as Docker.
+
+To use Brevo for email delivery, set:
+
+- `MAIL_HOST=smtp-relay.brevo.com`
+- `MAIL_PORT=587`
+- `MAIL_ENCRYPTION=tls`
+- `MAIL_USERNAME=<your Brevo SMTP login>`
+- `MAIL_PASSWORD=<your Brevo SMTP key>`
+- `MAIL_FROM_ADDRESS=<a Brevo-verified sender email>`
+- `MAIL_REPLY_TO_ADDRESS=<optional reply-to address>`
+
+Keep the default Mailpit settings for local development if you want to test email without sending real messages.
+After changing `.env`, restart Apache, PHP-FPM, or your Docker containers so the new values are picked up.
+
+Login verification now uses a 6-digit one-time code:
+
+- Protected accounts receive a code by email.
+- The app opens the verification page instead of logging straight into the portal.
+- Entering the code successfully redirects the user to the correct dashboard.
 
 The first database start loads the schema from `docker/mysql/init/01-schema.sql`.
 
