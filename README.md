@@ -120,6 +120,12 @@ Then add inspection failure tracking and retryable email delivery:
 type docker\mysql\migrations\13_add_notification_delivery_and_inspection_failure.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
 ```
 
+For Joy's 14-day insurance and driving licence reminder demonstration:
+
+```cmd
+type docker\mysql\migrations\15_set_joy_14_day_insurance_licence_window.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
+```
+
 For a presentation demo, add the Joy Gatiti reminder record that expires exactly 14 days from the demo day:
 
 ```cmd
@@ -194,7 +200,7 @@ The login page's `Forgot Password` flow now emails a reset link to the account e
 
 ### Scheduled Reminders
 
-The Docker stack runs a scheduler container that scans all active vehicles daily at `10:00 AM` Africa/Nairobi time for expired or invalid compliance records and failed inspections. It also retries failed email deliveries every five minutes.
+The Docker stack runs a scheduler container daily at `10:00 AM` Africa/Nairobi time. For each active vehicle, it sends a de-duplicated alert every day while insurance or driving licence expiry is between 1 and 14 days away, and it also alerts for expired/invalid compliance records and failed inspections. Failed email deliveries are retried every five minutes.
 
 To run the jobs manually:
 

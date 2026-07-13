@@ -454,11 +454,11 @@ function vcs_compliance_issues(array $vehicle, string $today): array
         if ($expiry !== '' && $expiry <= $today) {
             $issues[] = $label . ' expired on ' . $expiry;
         } elseif ($expiry !== '') {
-            $fourteenDaysFromNow = (new DateTimeImmutable($today, new DateTimeZone('Africa/Nairobi')))
-                ->modify('+14 days')
-                ->format('Y-m-d');
-            if ($expiry === $fourteenDaysFromNow) {
-                $issues[] = $label . ' expires in 14 days on ' . $expiry;
+            $daysUntilExpiry = (int) (new DateTimeImmutable($today, new DateTimeZone('Africa/Nairobi')))
+                ->diff(new DateTimeImmutable($expiry, new DateTimeZone('Africa/Nairobi')))
+                ->format('%r%a');
+            if ($daysUntilExpiry >= 1 && $daysUntilExpiry <= 14) {
+                $issues[] = $label . ' expires in ' . $daysUntilExpiry . ' days on ' . $expiry;
             }
         }
     }

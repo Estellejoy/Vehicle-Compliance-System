@@ -50,7 +50,7 @@ VALUES
         102,
         DATE_ADD(CURDATE(), INTERVAL 14 DAY),
         'Valid',
-        DATE_ADD(CURDATE(), INTERVAL 120 DAY),
+        DATE_ADD(CURDATE(), INTERVAL 14 DAY),
         'Valid',
         DATE_ADD(CURDATE(), INTERVAL 60 DAY),
         'Valid'

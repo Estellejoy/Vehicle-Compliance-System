@@ -78,6 +78,8 @@ try {
         ], 409);
     }
 
+    $pdo->beginTransaction();
+
     $token = bin2hex(random_bytes(32));
     $tokenHash = hash('sha256', $token);
     $tokenExpiresAt = (new DateTimeImmutable('+24 hours'))->format('Y-m-d H:i:s');
@@ -113,6 +115,13 @@ try {
         'token_expires_at' => $tokenExpiresAt,
     ]);
 
+    // Capture the generated ID immediately and use it for the related role row.
+    // This also prevents a partial account if role creation fails.
+    $registeredUserId = (int) $pdo->lastInsertId();
+    if ($registeredUserId <= 0) {
+        throw new RuntimeException('The database did not return the new user ID.');
+    }
+
     if (vcs_has_table($pdo, 'user_roles')) {
         // Mirror the primary owner role in the normalized role table when present.
         $rolesInsert = $pdo->prepare(
@@ -121,10 +130,12 @@ try {
              ON DUPLICATE KEY UPDATE is_primary = VALUES(is_primary)'
         );
         $rolesInsert->execute([
-            'user_id' => (int) $pdo->lastInsertId(),
+            'user_id' => $registeredUserId,
             'role' => 'owner',
         ]);
     }
+
+    $pdo->commit();
 
     $appUrl = rtrim(getenv('APP_URL') ?: 'http://localhost:8080', '/');
     $verifyLink = $appUrl . '/verify.php?token=' . urlencode($token);
@@ -151,10 +162,17 @@ try {
     $_SESSION['register_flash'] = $response;
     header('Location: /register');
     exit;
-} catch (PDOException $e) {
+} catch (Throwable $e) {
+    if ($pdo instanceof PDO && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+
     error_log($e->getMessage());
+    $duplicateAccount = $e instanceof PDOException && (int) ($e->errorInfo[1] ?? 0) === 1062;
     register_respond([
-        'type' => 'danger',
-        'message' => 'Database error while creating the account.',
-    ], 500);
+        'type' => $duplicateAccount ? 'warning' : 'danger',
+        'message' => $duplicateAccount
+            ? 'An account already exists for that email address.'
+            : 'Database error while creating the account.',
+    ], $duplicateAccount ? 409 : 500);
 }
