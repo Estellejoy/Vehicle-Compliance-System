@@ -3,6 +3,7 @@ session_start();
 
 require_once 'config/db.php';
 
+// Email verification is a one-time activation step after registration.
 $title = 'Email Verification';
 $message = 'Verification link is invalid or expired.';
 $messageType = 'danger';

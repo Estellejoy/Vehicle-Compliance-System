@@ -1,8 +1,6 @@
 <?php
-// backend/auth.php
 session_start();
 
-// 1. Import database connection
 require_once '../config/db.php';
 require_once __DIR__ . '/auth_helpers.php';
 require_once __DIR__ . '/../config/mail.php';
@@ -13,14 +11,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $selectedRole = vcs_normalize_role($_POST['role'] ?? '');
     
     try {
-        // 2. Load the account first so we can distinguish verification and password errors
+        // Load the account first so we can return specific errors for inactive, unverified, or invalid credentials.
         $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :email LIMIT 1");
         $stmt->execute([
             'email' => $email,
         ]);
-        
+
         $user = $stmt->fetch();
-        
+
         if ($user) {
             if ((int)($user['is_active'] ?? 0) !== 1) {
                 if (empty($user['email_verified_at'])) {
@@ -32,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if (empty($user['password_hash'])) {
+                // Some demo users still rely on a legacy password format; upgrade them after a successful check.
                 $legacyPassword = explode('@', $email, 2)[0] . '@123';
 
                 if (!hash_equals($legacyPassword, $password)) {
@@ -57,6 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
+            // Resolve every role this account may use before choosing the dashboard.
             $availableRoles = vcs_available_roles_for_user($pdo, $user);
 
             if (!$availableRoles) {
@@ -79,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if (vcs_login_verification_required($user)) {
+                // Some demo accounts must confirm a one-time code before the session is created.
                 $verification = vcs_create_login_verification_token($pdo, (int) $user['user_id'], $selectedRole);
                 $appUrl = rtrim(getenv('APP_URL') ?: 'http://localhost:8080', '/');
                 $verifyPageUrl = $appUrl . '/verify_login.php';
@@ -106,19 +107,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            // 3. Save details safely to session string variables
+            // Persist the authenticated identity in the session and refresh the session ID.
             vcs_store_auth_session($user, $selectedRole, $availableRoles);
-            
-            // 4. Redirect smoothly based on role
+
             header('Location: ' . vcs_dashboard_url_for_role($selectedRole));
             exit;
-            
+
         } else {
-            // Mismatch redirect
             header("Location: /login?error=Invalid credentials or inactive account.");
             exit;
         }
-        
+
     } catch (\PDOException $e) {
         header("Location: /login?error=Database_Error");
         exit;

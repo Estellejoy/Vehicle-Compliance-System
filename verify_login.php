@@ -4,6 +4,7 @@ session_start();
 require_once 'config/db.php';
 require_once __DIR__ . '/backend/auth_helpers.php';
 
+// This page completes the optional second factor used for selected demo accounts.
 $flash = $_SESSION['flash_message'] ?? null;
 $flashType = $_SESSION['flash_type'] ?? null;
 $flashCode = $_SESSION['flash_code'] ?? null;

@@ -17,6 +17,7 @@ function vcs_password_reset_link(string $token): string
 
 function vcs_create_password_reset_request(PDO $pdo, array $user): array
 {
+    // Issue a fresh token, clear stale tokens for the same user, and keep only the hash in storage.
     $token = vcs_password_reset_token_value();
     $tokenHash = hash('sha256', $token);
     $expiresAt = vcs_password_reset_expiry();
@@ -67,6 +68,7 @@ function vcs_send_password_reset_link(PDO $pdo, array $user): array
 
 function vcs_find_password_reset_request(PDO $pdo, string $token): ?array
 {
+    // Look up the reset request by hash and reject used or expired links.
     $tokenHash = hash('sha256', trim($token));
 
     $stmt = $pdo->prepare(
@@ -93,6 +95,7 @@ function vcs_find_password_reset_request(PDO $pdo, string $token): ?array
 
 function vcs_apply_password_reset(PDO $pdo, int $tokenId, int $userId, string $newPassword): void
 {
+    // Update the password and consume the token in one transaction.
     $pdo->beginTransaction();
 
     try {

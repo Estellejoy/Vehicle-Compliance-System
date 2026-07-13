@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbf8"/>
+      <stop offset="55%" stop-color="#eef5ef"/>
+      <stop offset="100%" stop-color="#f6f0e7"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#fbfcfa"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a7a3c"/>
+      <stop offset="100%" stop-color="#0d8a46"/>
+    </linearGradient>
+    <linearGradient id="sand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f5efe6"/>
+      <stop offset="100%" stop-color="#eadfce"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#1f2d23" flood-opacity="0.10"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#0a7a3c"/>
+    </marker>
+    <marker id="arrowSoft" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#5f6f65"/>
+    </marker>
+    <style>
+      .title { font: 700 30px Arial, sans-serif; fill: #1f2d23; }
+      .subtitle { font: 400 15px Arial, sans-serif; fill: #5f6f65; }
+      .section { font: 700 18px Arial, sans-serif; fill: #0a7a3c; letter-spacing: 1px; }
+      .label { font: 700 15px Arial, sans-serif; fill: #1f2d23; }
+      .body { font: 400 14px Arial, sans-serif; fill: #314137; }
+      .small { font: 400 12px Arial, sans-serif; fill: #5f6f65; }
+      .tiny { font: 400 11px Arial, sans-serif; fill: #5f6f65; }
+      .chip { fill: #e9f6ee; stroke: #cde6d5; stroke-width: 1.2; }
+      .card { fill: #ffffff; stroke: #dbe8de; stroke-width: 1.5; rx: 18; filter: url(#shadow); }
+      .inner { fill: #fbfcfa; stroke: #dbe8de; stroke-width: 1.2; rx: 16; }
+      .boundary { fill: url(#panel); stroke: #0a7a3c; stroke-width: 2.5; rx: 24; stroke-dasharray: 10 7; }
+      .actor { fill: #ffffff; stroke: #0a7a3c; stroke-width: 1.6; rx: 16; filter: url(#shadow); }
+      .db { fill: url(#sand); stroke: #b08a5a; stroke-width: 1.8; rx: 18; }
+      .backend { fill: #f4fbf6; stroke: #9fd0ad; stroke-width: 1.5; rx: 18; }
+      .frontend { fill: #ffffff; stroke: #dbe8de; stroke-width: 1.5; rx: 18; }
+      .pill { fill: #0a7a3c; }
+      .pillText { font: 700 11px Arial, sans-serif; fill: #ffffff; letter-spacing: 0.8px; }
+      .arrow { stroke: #0a7a3c; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .arrowSoft { stroke: #5f6f65; stroke-width: 2.6; fill: none; marker-end: url(#arrowSoft); }
+      .arrowBoth { stroke: #0a7a3c; stroke-width: 3; fill: none; marker-start: url(#arrowSoft); marker-end: url(#arrow); }
+      .dotted { stroke-dasharray: 8 7; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+
+  <!-- Title -->
+  <text x="70" y="58" class="title">Vehicle Compliance System - Conceptual Diagram</text>
+  <text x="70" y="82" class="subtitle">Shows the system boundary, front end, backend, database, external actors, and supporting services used in the implementation.</text>
+
+  <!-- External actors -->
+  <text x="60" y="170" class="section">EXTERNAL ACTORS</text>
+  <rect x="60" y="210" width="220" height="72" class="actor"/>
+  <text x="80" y="240" class="label">Vehicle Owner</text>
+  <text x="80" y="263" class="small">Login, view compliance, receive reminders</text>
+
+  <rect x="60" y="330" width="220" height="72" class="actor"/>
+  <text x="80" y="360" class="label">Traffic Officer</text>
+  <text x="80" y="383" class="small">Search vehicles, mark inspections, upload reports</text>
+
+  <rect x="60" y="450" width="220" height="72" class="actor"/>
+  <text x="80" y="480" class="label">Administrator</text>
+  <text x="80" y="503" class="small">Manage users, reset passwords, review reports</text>
+
+  <!-- System boundary -->
+  <rect x="330" y="150" width="1210" height="650" class="boundary"/>
+  <text x="610" y="174" class="section" fill="#0a7a3c">SYSTEM BOUNDARY</text>
+
+  <!-- Front end -->
+  <rect x="360" y="205" width="345" height="560" class="frontend"/>
+  <rect x="375" y="220" width="92" height="28" class="pill" rx="14"/>
+  <text x="399" y="239" class="pillText">FRONT END</text>
+  <text x="385" y="272" class="label">Bootstrap 5 UI</text>
+  <text x="385" y="295" class="body">Public home page</text>
+  <text x="385" y="318" class="body">Login / role selection</text>
+  <text x="385" y="341" class="body">Email verification (2FA)</text>
+  <text x="385" y="364" class="body">Forgot password / reset page</text>
+  <text x="385" y="387" class="body">Owner portal</text>
+  <text x="385" y="410" class="body">Officer dashboard</text>
+  <text x="385" y="433" class="body">Admin panel</text>
+  <text x="385" y="456" class="body">Feedback form</text>
+  <rect x="380" y="500" width="305" height="92" class="chip" rx="16"/>
+  <text x="398" y="528" class="label">Libraries</text>
+  <text x="398" y="551" class="tiny">Bootstrap</text>
+  <text x="398" y="570" class="tiny">Bootstrap Icons</text>
+  <text x="522" y="551" class="tiny">HTML / CSS / JS</text>
+  <text x="522" y="570" class="tiny">Responsive layouts</text>
+  <rect x="380" y="614" width="305" height="112" class="chip" rx="16"/>
+  <text x="398" y="642" class="label">Key browser actions</text>
+  <text x="398" y="665" class="tiny">Form validation</text>
+  <text x="398" y="684" class="tiny">Session-aware page routing</text>
+  <text x="398" y="703" class="tiny">Role-based navigation</text>
+
+  <!-- Backend -->
+  <rect x="730" y="205" width="340" height="560" class="backend"/>
+  <rect x="745" y="220" width="88" height="28" class="pill" rx="14"/>
+  <text x="767" y="239" class="pillText">BACK END</text>
+  <text x="755" y="272" class="label">PHP application logic</text>
+  <text x="755" y="295" class="body">Authentication and role control</text>
+  <text x="755" y="318" class="body">2FA token generation / verification</text>
+  <text x="755" y="341" class="body">Password reset service</text>
+  <text x="755" y="364" class="body">Notification service</text>
+  <text x="755" y="387" class="body">Inspection update workflow</text>
+  <text x="755" y="410" class="body">Scheduled reminder job</text>
+  <text x="755" y="433" class="body">Report export handlers</text>
+  <rect x="750" y="500" width="300" height="92" class="chip" rx="16"/>
+  <text x="768" y="528" class="label">Libraries / services</text>
+  <text x="768" y="551" class="tiny">PHP PDO</text>
+  <text x="768" y="570" class="tiny">PHPMailer</text>
+  <text x="885" y="551" class="tiny">Session handling</text>
+  <text x="885" y="570" class="tiny">Cron scheduler</text>
+  <rect x="750" y="614" width="300" height="112" class="chip" rx="16"/>
+  <text x="768" y="642" class="label">Algorithms</text>
+  <text x="768" y="665" class="tiny">password_hash / password_verify</text>
+  <text x="768" y="684" class="tiny">SHA-256 hashed tokens</text>
+  <text x="768" y="703" class="tiny">6-digit email verification code</text>
+
+  <!-- Database -->
+  <rect x="1100" y="205" width="410" height="560" class="db"/>
+  <rect x="1115" y="220" width="88" height="28" class="pill" rx="14"/>
+  <text x="1138" y="239" class="pillText">DATABASE</text>
+  <text x="1125" y="272" class="label">MySQL 8.0</text>
+  <text x="1125" y="295" class="body">users</text>
+  <text x="1125" y="318" class="body">vehicles</text>
+  <text x="1125" y="341" class="body">compliance_records</text>
+  <text x="1125" y="364" class="body">service_records</text>
+  <text x="1125" y="387" class="body">notifications</text>
+  <text x="1125" y="410" class="body">login_verification_tokens</text>
+  <text x="1125" y="433" class="body">password_reset_tokens</text>
+  <rect x="1120" y="500" width="360" height="92" class="chip" rx="16"/>
+  <text x="1138" y="528" class="label">Stored data</text>
+  <text x="1138" y="551" class="tiny">email verification states</text>
+  <text x="1138" y="570" class="tiny">inspection status history</text>
+  <text x="1265" y="551" class="tiny">notification event keys</text>
+  <text x="1265" y="570" class="tiny">reset token expiry</text>
+  <rect x="1120" y="614" width="360" height="112" class="chip" rx="16"/>
+  <text x="1138" y="642" class="label">Notification de-duplication</text>
+  <text x="1138" y="665" class="tiny">Unique event_code per vehicle and date</text>
+  <text x="1138" y="684" class="tiny">INSERT IGNORE on notification writes</text>
+  <text x="1138" y="703" class="tiny">Daily 10:00 AM expiry scan</text>
+
+  <!-- Arrows from actors to frontend -->
+  <path d="M280 246 L360 246" class="arrowBoth"/>
+  <path d="M280 366 L360 366" class="arrowBoth"/>
+  <path d="M280 486 L360 486" class="arrowBoth"/>
+
+  <!-- Frontend/backend/database communication -->
+  <path d="M705 330 L730 330" class="arrowBoth"/>
+  <path d="M1070 345 L1100 345" class="arrowBoth"/>
+
+  <!-- Backend to external email service -->
+  <rect x="1110" y="90" width="190" height="56" class="card"/>
+  <text x="1130" y="118" class="label">SMTP / Mailpit</text>
+  <text x="1130" y="138" class="small">Email transport + testing</text>
+  <path d="M900 205 L900 146 L1110 146" class="arrowSoft dotted"/>
+
+  <!-- Backend to scheduler callout -->
+  <rect x="740" y="90" width="230" height="56" class="card"/>
+  <text x="760" y="118" class="label">Cron job at 10:00 AM</text>
+  <text x="760" y="138" class="small">Runs expiry notifications daily</text>
+  <path d="M860 205 L860 146" class="arrowSoft dotted"/>
+
+  <!-- Note -->
+  <text x="70" y="835" class="subtitle">
+    Concept summary: users interact with the PHP frontend, the backend enforces authentication, 2FA, password reset, inspections, and notifications, and MySQL stores all persistent records.
+  </text>
+</svg>

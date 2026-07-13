@@ -6,6 +6,7 @@ require_once __DIR__ . '/auth_helpers.php';
 
 function feedback_flash(string $type, string $message): void
 {
+    // Store the user message in session and send the visitor back to the feedback section.
     $_SESSION['feedback_flash'] = [
         'type' => $type,
         'message' => $message,
@@ -27,6 +28,7 @@ $message = trim((string) ($_POST['message'] ?? ''));
 $sourcePage = trim((string) ($_POST['source_page'] ?? 'index.php'));
 $userAgent = substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255);
 
+// Basic validation keeps the public form lightweight while still rejecting empty submissions.
 if ($name === '' || $email === '' || $message === '') {
     feedback_flash('danger', 'Please fill in your name, email address, and feedback message.');
 }

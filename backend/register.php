@@ -7,6 +7,7 @@ require_once __DIR__ . '/../config/mail.php';
 
 function register_wants_json(): bool
 {
+    // The register page supports both normal form posts and AJAX submissions.
     $requestedWith = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
     $accept = strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
 
@@ -15,6 +16,7 @@ function register_wants_json(): bool
 
 function register_respond(array $payload, int $statusCode = 200): void
 {
+    // Keep browser redirects and JSON responses in one place.
     if (register_wants_json()) {
         http_response_code($statusCode);
         header('Content-Type: application/json; charset=utf-8');
@@ -32,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// Validate everything before touching the database.
 $name = trim($_POST['name'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $password = (string) ($_POST['password'] ?? '');
@@ -80,6 +83,7 @@ try {
     $tokenExpiresAt = (new DateTimeImmutable('+24 hours'))->format('Y-m-d H:i:s');
     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
+    // New accounts start inactive until the email verification link is used.
     $insert = $pdo->prepare(
         "INSERT INTO users (
             name,
@@ -110,6 +114,7 @@ try {
     ]);
 
     if (vcs_has_table($pdo, 'user_roles')) {
+        // Mirror the primary owner role in the normalized role table when present.
         $rolesInsert = $pdo->prepare(
             'INSERT INTO user_roles (user_id, role, is_primary)
              VALUES (:user_id, :role, 1)

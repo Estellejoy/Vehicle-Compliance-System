@@ -40,6 +40,7 @@ function vcs_notification_message_for_inspection(array $vehicle, string $inspect
 
 function vcs_notification_has_schema(PDO $pdo): bool
 {
+    // Newer migrations add extra columns, but the job still supports the older schema.
     return vcs_has_column($pdo, 'notifications', 'vehicle_id')
         && vcs_has_column($pdo, 'notifications', 'event_code')
         && vcs_has_column($pdo, 'notifications', 'event_date');
@@ -47,6 +48,7 @@ function vcs_notification_has_schema(PDO $pdo): bool
 
 function vcs_insert_notification(PDO $pdo, array $data): bool
 {
+    // Write the simplest possible record when the schema is older, otherwise deduplicate by event code.
     $hasSchema = vcs_notification_has_schema($pdo);
     $baseColumns = [
         'user_id' => (int) ($data['user_id'] ?? 0),
@@ -194,6 +196,7 @@ function vcs_send_owner_expiry_notification(
     string $field,
     int $daysRemaining
 ): array {
+    // Save the reminder first so the email and database stay aligned.
     $field = strtolower(trim($field));
     $expiryDate = (string) ($compliance[$field . '_expiry'] ?? '');
     $vehicleId = (int) ($vehicle['vehicle_id'] ?? 0);
@@ -261,6 +264,7 @@ function vcs_send_owner_inspection_notification(
     string $checkedAt,
     string $checkedBy = ''
 ): array {
+    // Inspection updates use the same notification pipeline as expiry reminders.
     $vehicleId = (int) ($vehicle['vehicle_id'] ?? 0);
     $eventDate = substr($checkedAt, 0, 10);
     $eventCode = vcs_notification_event_code('inspection_status_update', $vehicleId, $eventDate);
@@ -319,6 +323,7 @@ function vcs_send_owner_inspection_notification(
 
 function vcs_send_expiry_notifications(PDO $pdo): array
 {
+    // Daily cron job: find vehicles expiring in 14 days and notify the relevant owners.
     $results = [
         'insurance' => 0,
         'licence' => 0,

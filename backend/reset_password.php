@@ -7,6 +7,7 @@ require_once __DIR__ . '/password_reset_service.php';
 
 function flash_reset(array $payload): void
 {
+    // Flash the error or success message back to the reset form and preserve the token if present.
     $_SESSION['reset_password_flash'] = $payload;
     $redirect = '/reset-password';
     if (!empty($_POST['token'])) {
@@ -21,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// Keep validation strict so broken reset requests never reach the database layer.
 $token = trim((string) ($_POST['token'] ?? ''));
 $newPassword = (string) ($_POST['new_password'] ?? '');
 $confirmPassword = (string) ($_POST['confirm_password'] ?? '');

@@ -6,6 +6,7 @@ unset($_SESSION['reset_password_flash']);
 
 require_once __DIR__ . '/backend/auth_helpers.php';
 
+// The token comes from the email reset link and is passed back unchanged on submit.
 $token = trim($_GET['token'] ?? '');
 ?>
 <!DOCTYPE html>

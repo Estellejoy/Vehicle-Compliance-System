@@ -1,5 +1,7 @@
 <?php
 
+// Central place for roles, password policy, and login/session helpers used across the app.
+
 function vcs_supported_roles(): array
 {
     return [
@@ -63,6 +65,7 @@ function vcs_validate_password_strength(string $password): array
 
 function vcs_dashboard_url_for_role(string $role): string
 {
+    // Each role lands on a different dashboard after login.
     return match (vcs_normalize_role($role)) {
         'admin' => '/views/admin_panel.php',
         'officer' => '/views/officer_dashboard.php',
@@ -72,6 +75,7 @@ function vcs_dashboard_url_for_role(string $role): string
 
 function vcs_login_verification_required(array $user): bool
 {
+    // Only a small set of demo accounts use the extra login-code step.
     $email = strtolower(trim((string) ($user['email'] ?? '')));
     $protectedEmails = [
         'joy.gatiti@strathmore.edu',
@@ -93,6 +97,7 @@ function vcs_login_verification_code(): string
 
 function vcs_create_login_verification_token(PDO $pdo, int $userId, string $selectedRole): array
 {
+    // Issue a short-lived one-time code and store only a hashed reference in the database.
     $code = vcs_login_verification_code();
     $expiresAt = vcs_login_verification_expires_at();
     $placeholderHash = hash('sha256', random_bytes(32));
@@ -131,6 +136,7 @@ function vcs_create_login_verification_token(PDO $pdo, int $userId, string $sele
 
 function vcs_consume_login_verification_token(PDO $pdo, int $tokenId, string $code): ?array
 {
+    // Match the code, enforce expiry, and mark the token as used so it cannot be replayed.
     $tokenHash = hash('sha256', $tokenId . ':' . trim($code));
 
     $stmt = $pdo->prepare(
@@ -180,6 +186,7 @@ function vcs_consume_login_verification_token(PDO $pdo, int $tokenId, string $co
 
 function vcs_has_table(PDO $pdo, string $table): bool
 {
+    // Schema checks let the app adapt to migrations without breaking older demo data.
     static $cache = [];
 
     if (!array_key_exists($table, $cache)) {
@@ -202,6 +209,7 @@ function vcs_has_table(PDO $pdo, string $table): bool
 
 function vcs_has_column(PDO $pdo, string $table, string $column): bool
 {
+    // Cached column lookups keep the schema-aware checks cheap.
     static $cache = [];
     $key = $table . '.' . $column;
 
@@ -229,6 +237,7 @@ function vcs_has_column(PDO $pdo, string $table, string $column): bool
 
 function vcs_get_user_roles(PDO $pdo, int $userId, ?string $fallbackRole = null): array
 {
+    // Support both normalized multi-role accounts and older single-role records.
     $roles = [];
 
     if (vcs_has_table($pdo, 'user_roles')) {
@@ -263,6 +272,7 @@ function vcs_available_roles_for_user(PDO $pdo, array $user): array
 
 function vcs_store_auth_session(array $user, string $role, array $roles = []): void
 {
+    // Regenerate the session ID before storing identity to reduce fixation risk.
     session_regenerate_id(true);
 
     $_SESSION['user_id'] = $user['user_id'];
