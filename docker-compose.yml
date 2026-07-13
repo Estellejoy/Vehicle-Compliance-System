@@ -30,6 +30,7 @@ services:
   scheduler:
     build: .
     container_name: vehicle-compliance-scheduler
+    restart: unless-stopped
     command: ["cron", "-f"]
     volumes:
       - ./:/var/www/html

@@ -19,17 +19,23 @@ $total_vehicles = 0;
 $fully_compliant_vehicles = 0;
 $non_compliant_vehicles = 0;
 $overall_status_label = 'No Vehicles Found';
+$notifications = [];
+$unread_notifications = 0;
 
 function inspectionBadgeClass($status)
 {
     $normalized = strtolower(trim((string) $status));
 
-    if ($normalized === 'checked') {
+    if (in_array($normalized, ['checked', 'inspected'], true)) {
         return 'bg-success-subtle text-success border border-success border-opacity-25';
     }
 
     if ($normalized === 'pending police check') {
         return 'bg-warning-subtle text-warning border border-warning border-opacity-25';
+    }
+
+    if (in_array($normalized, ['failed', 'non-compliant', 'non compliant', 'requires reinspection'], true)) {
+        return 'bg-danger-subtle text-danger border border-danger border-opacity-25';
     }
 
     return 'bg-secondary-subtle text-secondary border border-secondary border-opacity-25';
@@ -55,6 +61,7 @@ try {
                     WHEN c.insurance_status = 'Valid'
                      AND c.licence_status = 'Valid'
                      AND c.registration_status = 'Valid'
+                     AND LOWER(TRIM(COALESCE(v.inspection_status, ''))) NOT IN ('failed', 'fail', 'non-compliant', 'non compliant', 'requires reinspection')
                     THEN 1
                     ELSE 0
                 END
@@ -65,6 +72,7 @@ try {
                       OR c.insurance_status <> 'Valid'
                       OR c.licence_status <> 'Valid'
                       OR c.registration_status <> 'Valid'
+                      OR LOWER(TRIM(COALESCE(v.inspection_status, ''))) IN ('failed', 'fail', 'non-compliant', 'non compliant', 'requires reinspection')
                     THEN 1
                     ELSE 0
                 END
@@ -77,6 +85,17 @@ try {
     $complianceSummary = $complianceStmt->fetch() ?: [];
     $fully_compliant_vehicles = (int) ($complianceSummary['fully_compliant_count'] ?? 0);
     $non_compliant_vehicles = (int) ($complianceSummary['non_compliant_count'] ?? 0);
+
+    $notificationStmt = $pdo->prepare(
+        'SELECT notification_id, notification_type, message, status, date_sent, created_at
+         FROM notifications
+         WHERE user_id = :user_id
+         ORDER BY created_at DESC, notification_id DESC
+         LIMIT 20'
+    );
+    $notificationStmt->execute(['user_id' => $user_id]);
+    $notifications = $notificationStmt->fetchAll();
+    $unread_notifications = count(array_filter($notifications, static fn ($notification) => strcasecmp((string) ($notification['status'] ?? ''), 'Read') !== 0));
 
     if ($total_vehicles === 0) {
         $overall_status_label = 'No Vehicles Found';
@@ -202,6 +221,42 @@ try {
             </div>
         </div>
 
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+                    <div class="card-header bg-white py-3 border-bottom border-light d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold text-success"><i class="bi bi-bell me-2"></i>Notifications</h5>
+                        <?php if ($unread_notifications > 0): ?>
+                            <span class="badge bg-danger rounded-pill"><?php echo $unread_notifications; ?> unread</span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <?php if (!$notifications): ?>
+                            <div class="list-group-item text-secondary py-4">No notifications yet.</div>
+                        <?php else: ?>
+                            <?php foreach ($notifications as $notification): ?>
+                                <div class="list-group-item py-3 <?php echo strcasecmp((string) ($notification['status'] ?? ''), 'Read') !== 0 ? 'bg-warning-subtle' : ''; ?>">
+                                    <div class="d-flex justify-content-between gap-3">
+                                        <div>
+                                            <div class="fw-semibold"><?php echo htmlspecialchars($notification['notification_type']); ?></div>
+                                            <div class="small text-secondary mt-1"><?php echo htmlspecialchars($notification['message']); ?></div>
+                                            <div class="small text-muted mt-1"><?php echo htmlspecialchars($notification['date_sent']); ?></div>
+                                        </div>
+                                        <?php if (strcasecmp((string) ($notification['status'] ?? ''), 'Read') !== 0): ?>
+                                            <form method="POST" action="/backend/mark_notification_read.php" class="flex-shrink-0">
+                                                <input type="hidden" name="notification_id" value="<?php echo (int) $notification['notification_id']; ?>">
+                                                <button class="btn btn-sm btn-outline-success" type="submit">Mark read</button>
+                                            </form>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-12">
                 <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
@@ -264,7 +319,7 @@ try {
                                                     >
                                                         <i class="bi bi-eye"></i> Details
                                                     </a>
-                                                    <?php if (strtolower(trim((string) ($vehicle['inspection_status'] ?? ''))) === 'checked'): ?>
+                                                    <?php if (in_array(strtolower(trim((string) ($vehicle['inspection_status'] ?? ''))), ['checked', 'inspected'], true)): ?>
                                                         <a
                                                             class="btn btn-outline-secondary btn-sm fw-semibold ms-2"
                                                             href="/backend/export_record.php?vehicle_id=<?php echo urlencode((string) $vehicle['vehicle_id']); ?>"

@@ -63,13 +63,26 @@ function sendVehicleInspectionStatusEmail(
     string $plateNumber,
     string $inspectionStatus,
     string $checkedAt,
-    string $checkedBy = ''
+    string $checkedBy = '',
+    string $failureReason = ''
 ): bool {
     $subject = 'Inspection status updated for ' . $plateNumber;
-    $htmlBody = buildVehicleInspectionStatusHtml($toName, $plateNumber, $inspectionStatus, $checkedAt, $checkedBy);
-    $textBody = buildVehicleInspectionStatusText($toName, $plateNumber, $inspectionStatus, $checkedAt, $checkedBy);
+    $htmlBody = buildVehicleInspectionStatusHtml($toName, $plateNumber, $inspectionStatus, $checkedAt, $checkedBy, $failureReason);
+    $textBody = buildVehicleInspectionStatusText($toName, $plateNumber, $inspectionStatus, $checkedAt, $checkedBy, $failureReason);
 
     return sendMailMessage($toEmail, $toName, $subject, $htmlBody, $textBody);
+}
+
+function sendVehicleComplianceAlertEmail(string $toEmail, string $toName, string $plateNumber, array $issues): bool
+{
+    $subject = 'Vehicle compliance alert for ' . $plateNumber;
+    return sendMailMessage(
+        $toEmail,
+        $toName,
+        $subject,
+        buildVehicleComplianceAlertHtml($toName, $plateNumber, $issues),
+        buildVehicleComplianceAlertText($toName, $plateNumber, $issues)
+    );
 }
 
 function sendExceptionAlertEmail(string $toEmail, string $toName, string $subject, string $details): bool
@@ -86,7 +99,8 @@ function sendMailMessage(string $toEmail, string $toName, string $subject, strin
     $port = (int) (getenv('MAIL_PORT') ?: 587);
     $username = trim((string) (getenv('MAIL_USERNAME') ?: ''));
     $password = preg_replace('/\s+/', '', (string) (getenv('MAIL_PASSWORD') ?: ''));
-    $encryption = strtolower(trim((string) (getenv('MAIL_ENCRYPTION') ?: 'tls')));
+    $encryptionSetting = getenv('MAIL_ENCRYPTION');
+    $encryption = $encryptionSetting === false ? 'tls' : strtolower(trim((string) $encryptionSetting));
     $fromAddress = trim((string) (getenv('MAIL_FROM_ADDRESS') ?: $username ?: 'no-reply@example.com'));
     $fromName = trim((string) (getenv('MAIL_FROM_NAME') ?: 'Vehicle Compliance System'));
     $replyToAddress = trim((string) (getenv('MAIL_REPLY_TO_ADDRESS') ?: $fromAddress));
@@ -269,7 +283,8 @@ function buildVehicleInspectionStatusHtml(
     string $plateNumber,
     string $inspectionStatus,
     string $checkedAt,
-    string $checkedBy = ''
+    string $checkedBy = '',
+    string $failureReason = ''
 ): string {
     $safeName = htmlspecialchars($toName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     $safePlate = htmlspecialchars($plateNumber, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -278,12 +293,15 @@ function buildVehicleInspectionStatusHtml(
     $safeCheckedBy = htmlspecialchars($checkedBy, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
     $inspectorLine = $safeCheckedBy !== '' ? "<p><strong>Checked by:</strong> {$safeCheckedBy}</p>" : '';
+    $safeReason = htmlspecialchars($failureReason, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $reasonLine = $safeReason !== '' ? "<p><strong>Reason:</strong> {$safeReason}</p>" : '';
 
     return <<<HTML
 <p>Hello {$safeName},</p>
 <p>Your vehicle {$safePlate} inspection status has been updated to <strong>{$safeStatus}</strong>.</p>
 <p><strong>Checked at:</strong> {$safeCheckedAt}</p>
 {$inspectorLine}
+{$reasonLine}
 <p>You can sign in to review the latest compliance details.</p>
 HTML;
 }
@@ -293,7 +311,8 @@ function buildVehicleInspectionStatusText(
     string $plateNumber,
     string $inspectionStatus,
     string $checkedAt,
-    string $checkedBy = ''
+    string $checkedBy = '',
+    string $failureReason = ''
 ): string {
     $message = "Hello {$toName},\n\n"
         . "Your vehicle {$plateNumber} inspection status has been updated to {$inspectionStatus}.\n"
@@ -302,8 +321,30 @@ function buildVehicleInspectionStatusText(
     if ($checkedBy !== '') {
         $message .= "Checked by: {$checkedBy}\n";
     }
+    if ($failureReason !== '') {
+        $message .= "Reason: {$failureReason}\n";
+    }
 
     return $message . "\nYou can sign in to review the latest compliance details.";
+}
+
+function buildVehicleComplianceAlertHtml(string $toName, string $plateNumber, array $issues): string
+{
+    $safeName = htmlspecialchars($toName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $safePlate = htmlspecialchars($plateNumber, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $items = '';
+    foreach ($issues as $issue) {
+        $items .= '<li>' . htmlspecialchars((string) $issue, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</li>';
+    }
+
+    return "<p>Hello {$safeName},</p><p>Vehicle <strong>{$safePlate}</strong> currently requires attention:</p><ul>{$items}</ul><p>Please update the affected records and remain compliant.</p>";
+}
+
+function buildVehicleComplianceAlertText(string $toName, string $plateNumber, array $issues): string
+{
+    return "Hello {$toName},\n\nVehicle {$plateNumber} currently requires attention:\n- "
+        . implode("\n- ", array_map('strval', $issues))
+        . "\n\nPlease update the affected records and remain compliant.";
 }
 
 function buildExceptionAlertHtml(string $toName, string $subject, string $details): string

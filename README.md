@@ -114,6 +114,12 @@ Then add the notification event metadata used for owner reminders and inspection
 type docker\mysql\migrations\10_add_notification_event_metadata.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
 ```
 
+Then add inspection failure tracking and retryable email delivery:
+
+```cmd
+type docker\mysql\migrations\13_add_notification_delivery_and_inspection_failure.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
+```
+
 For a presentation demo, add the Joy Gatiti reminder record that expires exactly 14 days from the demo day:
 
 ```cmd
@@ -138,12 +144,19 @@ To add demo vehicle and workflow data for those accounts, apply:
 type docker\mysql\migrations\07_add_demo_account_data.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
 ```
 
+To give Jemima an owner-role portal view with both compliant and failed vehicle examples, apply:
+
+```cmd
+type docker\mysql\migrations\14_add_jemima_citizen_portal_data.sql | docker exec -i vehicle-compliance-db mysql -uvcs_user -pvcs_password -D vehicle_compliance
+```
+
 Demo login details:
 
 - Owner: `joy.gatiti@strathmore.edu`
 - Owner password: `joy.gatiti@123`
-- Officer: `jemima.moye@strathmore.edu`
-- Officer password: `jemima.moye@123`
+- Officer / portal owner: `jemima.moye@strathmore.edu`
+- Password: `jemima.moye@123`
+- Select `officer` to test inspections or `owner` to open Jemima's citizen portal.
 
 ### Seeded Tables
 
@@ -176,22 +189,21 @@ php tools/backfill-passwords.php
 
 After logging in, users can open `Change Password` from any dashboard to replace their temporary password with a personal one.
 Police inspection updates now record the officer name and the Nairobi-local timestamp of the last check.
-Vehicle owners now receive email plus in-app reminders when insurance or driving licence expiry is exactly 14 days away, and they receive an email plus in-app notification when an inspection status update is saved.
+Vehicle owners now receive email plus in-app alerts for invalid or expired compliance records, 14-day expiry warnings, and failed inspection updates. Email delivery is retried when SMTP is temporarily unavailable.
 The login page's `Forgot Password` flow now emails a reset link to the account email address, and admins can either send the same reset link from the admin panel or set a new password directly.
 
 ### Scheduled Reminders
 
-The Docker stack now runs a scheduler container that triggers the expiry reminder job every day at `10:00 AM` Africa/Nairobi time.
+The Docker stack runs a scheduler container that scans all active vehicles daily at `10:00 AM` Africa/Nairobi time for expired or invalid compliance records and failed inspections. It also retries failed email deliveries every five minutes.
 
-To run the job manually:
+To run the jobs manually:
 
 ```bash
 php tools/send_expiry_notifications.php
+php tools/process_notification_deliveries.php
 ```
 
-The job de-duplicates reminders by vehicle, reminder type, and expiry date, so repeated runs do not resend the same reminder.
-The presentation demo migration creates a Joy Gatiti vehicle whose insurance expiry is exactly 14 days out, so this job will generate a live reminder for `joy.gatiti@strathmore.edu` right away.
-If you also apply the presentation cleanup migration, the seeded reminder for another owner is moved off the 14-day boundary so the live demo stays focused on your account.
+Daily alerts are de-duplicated per vehicle and day. Email delivery is tracked separately from the in-app notification, so a temporary SMTP failure can be retried without losing the in-app alert.
 
 The scheduler container is named `vehicle-compliance-scheduler` and uses the same environment variables as the app container.
 

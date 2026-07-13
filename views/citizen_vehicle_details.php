@@ -18,12 +18,16 @@ function inspectionBadgeClass($status): string
 {
     $normalized = strtolower(trim((string) $status));
 
-    if ($normalized === 'checked') {
+    if (in_array($normalized, ['checked', 'inspected'], true)) {
         return 'bg-success-subtle text-success border border-success border-opacity-25';
     }
 
     if ($normalized === 'pending police check') {
         return 'bg-warning-subtle text-warning border border-warning border-opacity-25';
+    }
+
+    if (in_array($normalized, ['failed', 'non-compliant', 'non compliant', 'requires reinspection'], true)) {
+        return 'bg-danger-subtle text-danger border border-danger border-opacity-25';
     }
 
     return 'bg-secondary-subtle text-secondary border border-secondary border-opacity-25';
@@ -249,6 +253,10 @@ if ($vehicleId <= 0) {
                                 <div class="fw-semibold"><?php echo h($vehicle['inspection_checked_at'] ?? 'Not checked yet'); ?></div>
                                 <div class="small text-secondary mt-3">Checked by</div>
                                 <div class="fw-semibold"><?php echo h(vcs_inspector_badge_label($vehicle)); ?></div>
+                                <?php if (!empty($vehicle['inspection_failure_reason'])): ?>
+                                    <div class="small text-secondary mt-3">Failure reason</div>
+                                    <div class="fw-semibold text-danger"><?php echo h($vehicle['inspection_failure_reason']); ?></div>
+                                <?php endif; ?>
                                 <hr>
                                 <div class="small text-secondary text-uppercase fw-semibold">Recent service date</div>
                                 <div class="fw-semibold mt-2"><?php echo h($vehicle['last_service_date'] ?? '2025-10-24'); ?></div>

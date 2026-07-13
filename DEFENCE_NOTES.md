@@ -60,15 +60,15 @@ What to say:
 ## 3. Email Notifications
 
 The system sends two main kinds of notifications:
-- Daily expiry reminders
+- Daily compliance alerts
 - Inspection status updates
 
-Expiry reminders:
+Daily compliance alerts:
 - A scheduled job runs every day at 10:00 AM Africa/Nairobi time.
-- It scans compliance records for insurance or driving licence expiry exactly 14 days away.
-- It inserts an in-app notification.
-- It sends one email per event.
-- It de-duplicates by vehicle, event type, and expiry date.
+- It scans active vehicles for invalid, expired, or 14-day upcoming compliance records and failed inspections.
+- It inserts one in-app alert per vehicle per day.
+- It sends an email and retries temporary delivery failures.
+- It de-duplicates by vehicle, alert type, and event date.
 
 Inspection updates:
 - When an officer marks a vehicle as inspected, the owner gets an email and an in-app notification.
@@ -84,10 +84,11 @@ Key files:
 - [Dockerfile](./Dockerfile)
 - [docker/mysql/init/01-schema.sql](./docker/mysql/init/01-schema.sql)
 - [docker/mysql/migrations/10_add_notification_event_metadata.sql](./docker/mysql/migrations/10_add_notification_event_metadata.sql)
+- [docker/mysql/migrations/13_add_notification_delivery_and_inspection_failure.sql](./docker/mysql/migrations/13_add_notification_delivery_and_inspection_failure.sql)
 
 What to say:
 - "We centralized all mail templates and SMTP configuration in one mail helper."
-- "Owners receive both email and in-app notifications for expiry reminders and inspection updates."
+- "Owners receive both email and in-app notifications for daily compliance alerts and inspection updates."
 - "The daily reminder job is scheduled, repeatable, and safe from duplicates."
 
 ## 4. Suggested File Order For Defence
@@ -107,12 +108,12 @@ What to say:
 
 - "For login verification, we implemented an email-based step-up verification flow. After the password is accepted, the system sends a 6-digit code to the user's email, stores a short-lived token, and only creates the session after the code is verified."
 - "For password reset, the user requests a link, the system generates a hashed token, sends the reset link to email, and the reset page validates the token before allowing a new password to be saved."
-- "For notifications, we centralized email delivery and in-app notification creation. Expiry reminders run daily at 10:00 AM, and inspection status changes notify the owner immediately."
+- "For notifications, we centralized in-app alerts, email delivery, and retry handling. Compliance alerts run daily at 10:00 AM, and inspection status changes notify the owner immediately."
 
 ## 6. Demo Pointers
 
 - Use `joy.gatiti@strathmore.edu` for the presentation demo account.
 - Show the email in Mailpit.
 - Show the notification rows in MySQL.
-- Show the scheduled job output for expiry reminders.
+- Show the scheduled job output for daily compliance alerts.
 

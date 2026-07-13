@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $vehicleId = (int) ($_POST['vehicle_id'] ?? 0);
 $plateNumber = trim($_POST['plate_number'] ?? '');
 $action = trim($_POST['action'] ?? 'mark_inspected');
+$failureReason = trim((string) ($_POST['failure_reason'] ?? ''));
 $checkedBy = (int) ($_SESSION['user_id'] ?? 0);
 
 if ($plateNumber === '' && !empty($_SESSION['officer_last_plate_number'])) {
@@ -48,16 +49,22 @@ try {
         $vehicleId = (int) ($lookup->fetchColumn() ?: 0);
     }
 
-    if ($vehicleId <= 0 || $action !== 'mark_inspected') {
+    if ($vehicleId <= 0 || !in_array($action, ['mark_inspected', 'mark_failed'], true)) {
         header('Location: /views/officer_dashboard.php?error=invalid_request');
+        exit;
+    }
+
+    if ($action === 'mark_failed' && $failureReason === '') {
+        header('Location: /views/officer_dashboard.php?error=failure_reason_required');
         exit;
     }
 
     $statusColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_status'")->fetch();
     $checkedAtColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_checked_at'")->fetch();
     $checkedByColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_checked_by'")->fetch();
+    $failureReasonColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_failure_reason'")->fetch();
 
-    if (!$statusColumn || !$checkedAtColumn || !$checkedByColumn) {
+    if (!$statusColumn || !$checkedAtColumn || !$checkedByColumn || !$failureReasonColumn) {
         vcs_send_officer_exception(
             $pdo,
             $checkedBy,
@@ -96,60 +103,70 @@ try {
     $_SESSION['officer_last_plate_number'] = (string) ($vehicle['plate_number'] ?? $plateNumber);
 
     $checkedAt = vcs_notification_timestamp();
-    $previousStatus = trim((string) ($vehicle['inspection_status'] ?? ''));
+    $inspectionStatus = $action === 'mark_failed' ? 'Failed' : 'Checked';
 
     $stmt = $pdo->prepare(
         "UPDATE vehicles
-         SET inspection_status = 'Checked',
+         SET inspection_status = :inspection_status,
              inspection_checked_at = :checked_at,
-             inspection_checked_by = :checked_by
+             inspection_checked_by = :checked_by,
+             inspection_failure_reason = :failure_reason
          WHERE vehicle_id = :vehicle_id"
     );
     $stmt->execute([
         'vehicle_id' => $vehicleId,
+        'inspection_status' => $inspectionStatus,
         'checked_at' => $checkedAt,
         'checked_by' => $checkedBy > 0 ? $checkedBy : null,
+        'failure_reason' => $action === 'mark_failed' ? $failureReason : null,
     ]);
 
     $pdo->commit();
 
-    if (strcasecmp($previousStatus, 'Checked') !== 0) {
-        try {
-            $officerStmt = $pdo->prepare(
-                'SELECT user_id, name, email, badge_number, staff_id
-                 FROM users
-                 WHERE user_id = :user_id
-                 LIMIT 1'
-            );
-            $officerStmt->execute(['user_id' => $checkedBy]);
-            $officer = $officerStmt->fetch() ?: [];
-            $checkedByLabel = trim((string) ($officer['badge_number'] ?? $officer['staff_id'] ?? $officer['name'] ?? ''));
+    try {
+        $officerStmt = $pdo->prepare(
+            'SELECT user_id, name, email, badge_number, staff_id
+             FROM users
+             WHERE user_id = :user_id
+             LIMIT 1'
+        );
+        $officerStmt->execute(['user_id' => $checkedBy]);
+        $officer = $officerStmt->fetch() ?: [];
+        $checkedByLabel = trim((string) ($officer['badge_number'] ?? $officer['staff_id'] ?? $officer['name'] ?? ''));
 
-            vcs_send_owner_inspection_notification(
-                $pdo,
-                $vehicle,
-                $vehicle,
-                'Checked',
-                $checkedAt,
-                $checkedByLabel
-            );
-        } catch (Throwable $notificationError) {
-            error_log('Inspection notification failed: ' . $notificationError->getMessage());
-            vcs_send_admin_exception(
-                $pdo,
-                'Inspection notification failure',
-                sprintf(
-                    'Inspection update for vehicle ID %d succeeded, but the notification step failed. Error: %s',
-                    $vehicleId,
-                    $notificationError->getMessage()
-                )
-            );
+        $notificationResult = vcs_send_owner_inspection_notification(
+            $pdo,
+            $vehicle,
+            $vehicle,
+            $inspectionStatus,
+            $checkedAt,
+            $checkedByLabel,
+            $failureReason
+        );
+
+        if (!$notificationResult['saved'] && !$notificationResult['duplicate']) {
+            throw new RuntimeException('Inspection notification could not be saved.');
         }
+        if ($notificationResult['saved'] && !$notificationResult['email_sent']) {
+            error_log(sprintf('Inspection notification saved for vehicle %d; email queued for retry.', $vehicleId));
+        }
+    } catch (Throwable $notificationError) {
+        error_log('Inspection notification failed: ' . $notificationError->getMessage());
+        vcs_send_admin_exception(
+            $pdo,
+            'Inspection notification failure',
+            sprintf(
+                'Inspection update for vehicle ID %d succeeded, but the notification step failed. Error: %s',
+                $vehicleId,
+                $notificationError->getMessage()
+            )
+        );
     }
 
     vcs_redirect_officer_dashboard([
         'plate_number' => $plateNumber,
         'updated' => '1',
+        'notification' => 'queued',
     ]);
 } catch (Throwable $e) {
     if ($pdo instanceof PDO && $pdo->inTransaction()) {

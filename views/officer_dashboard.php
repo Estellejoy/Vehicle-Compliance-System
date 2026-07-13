@@ -23,12 +23,16 @@ function inspectionBadgeClass($status)
 {
     $normalized = strtolower(trim((string) $status));
 
-    if ($normalized === 'checked') {
+    if (in_array($normalized, ['checked', 'inspected'], true)) {
         return 'bg-success';
     }
 
     if ($normalized === 'pending police check') {
         return 'bg-warning text-dark';
+    }
+
+    if (in_array($normalized, ['failed', 'non-compliant', 'non compliant', 'requires reinspection'], true)) {
+        return 'bg-danger';
     }
 
     return 'bg-secondary';
@@ -49,6 +53,7 @@ $message = null;
 $messageType = 'info';
 $inspectionFeatureEnabled = false;
 $inspectionCheckedByBadgeColumn = false;
+$inspectionFailureReasonColumn = false;
 
 if (isset($_GET['updated'])) {
     $message = 'Inspection status updated successfully.';
@@ -59,13 +64,18 @@ if (isset($_GET['error']) && $_GET['error'] === 'inspection_columns_missing') {
     $message = 'This database does not have the inspection columns yet. Run the migration in the README.';
     $messageType = 'warning';
 }
+if (isset($_GET['error']) && $_GET['error'] === 'failure_reason_required') {
+    $message = 'Enter a failure reason before marking the inspection as failed.';
+    $messageType = 'warning';
+}
 
 try {
     $inspectionStatusColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_status'")->fetch();
     $inspectionCheckedAtColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_checked_at'")->fetch();
     $inspectionCheckedByColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_checked_by'")->fetch();
+    $inspectionFailureReasonColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_failure_reason'")->fetch();
     $inspectionCheckedByBadgeColumn = vcs_has_column($pdo, 'users', 'badge_number');
-    $inspectionFeatureEnabled = (bool) $inspectionStatusColumn && (bool) $inspectionCheckedAtColumn && (bool) $inspectionCheckedByColumn;
+    $inspectionFeatureEnabled = (bool) $inspectionStatusColumn && (bool) $inspectionCheckedAtColumn && (bool) $inspectionCheckedByColumn && (bool) $inspectionFailureReasonColumn;
 } catch (PDOException $e) {
     error_log($e->getMessage());
 }
@@ -312,13 +322,21 @@ if ($searchRequested || $plateNumber !== '') {
                                 <div class="fw-semibold"><?php echo h(vcs_inspector_badge_label($vehicle)); ?></div>
                             </div>
                                 <div class="col-md-6 text-md-end">
-                                    <form method="POST" action="../backend/update_record.php" class="d-inline-block no-print">
-                                        <input type="hidden" name="action" value="mark_inspected">
+                                    <form method="POST" action="../backend/update_record.php" class="no-print">
                                         <input type="hidden" name="vehicle_id" value="<?php echo h($vehicle['vehicle_id']); ?>">
                                         <input type="hidden" name="plate_number" value="<?php echo h($vehicle['plate_number']); ?>">
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="bi bi-check2-circle me-1"></i> Mark as Checked
-                                        </button>
+                                        <div class="mb-2 text-start">
+                                            <label class="form-label small mb-1" for="failure_reason">Failure reason (required only when failing)</label>
+                                            <input class="form-control form-control-sm" id="failure_reason" name="failure_reason" maxlength="255" placeholder="e.g. Defective brake lights">
+                                        </div>
+                                        <div class="d-flex gap-2 justify-content-end">
+                                            <button type="submit" name="action" value="mark_failed" class="btn btn-outline-danger">
+                                                <i class="bi bi-x-circle me-1"></i> Mark as Failed
+                                            </button>
+                                            <button type="submit" name="action" value="mark_inspected" class="btn btn-success">
+                                                <i class="bi bi-check2-circle me-1"></i> Mark as Checked
+                                            </button>
+                                        </div>
                                     </form>
                                 </div>
                             </div>

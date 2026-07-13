@@ -13,9 +13,9 @@ try {
     $results = vcs_send_expiry_notifications($pdo);
 
     echo sprintf(
-        "Expiry notification run complete. Insurance: %d, Licence: %d, Skipped: %d, Failed mail deliveries: %d\n",
-        $results['insurance'],
-        $results['licence'],
+        "Daily compliance notification run complete. Scanned: %d, Alerts: %d, Skipped: %d, Failed mail deliveries: %d\n",
+        $results['scanned'],
+        $results['alerts'],
         $results['skipped'],
         $results['failed']
     );

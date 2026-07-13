@@ -38,7 +38,7 @@ It performs CRUD operations and database communication using PDO.
 ## 8. What is the role of the algorithms section?
 
 **Answer:**
-It shows the important rules and processing logic used by the system, such as password hashing, token hashing, expiry reminders, deduplication, and role-based routing.
+It shows the important rules and processing logic used by the system, such as password hashing, token hashing, daily compliance alerts, delivery retries, and deduplication, and role-based routing.
 
 ## 9. Why is PHPMailer shown in the diagram?
 

@@ -12,7 +12,7 @@ The front end communicates with the back end. The back end is where the business
 
 Below that is the data access layer. This layer is responsible for database communication using PDO. It performs CRUD operations and validation, and it sits between the business logic and the database.
 
-The algorithms section shows the key processing rules used by the system. For example, passwords are hashed and verified, login and reset tokens are SHA-256 hashed, login verification uses a 6-digit code, expiry reminders run daily at 10:00 AM, notifications are de-duplicated by event key, sessions are routed by role, and inspection updates follow a controlled workflow.
+The algorithms section shows the key processing rules used by the system. For example, passwords are hashed and verified, login and reset tokens are SHA-256 hashed, login verification uses a 6-digit code, daily compliance alerts run at 10:00 AM with retryable email delivery, notifications are de-duplicated by event key, sessions are routed by role, and inspection updates follow a controlled workflow.
 
 On the right is the MySQL database. This stores users, vehicles, compliance records, service records, notifications, login verification tokens, and password reset tokens.
 

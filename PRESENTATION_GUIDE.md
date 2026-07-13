@@ -176,16 +176,16 @@ Main files:
 
 The system sends two main notification types:
 
-- daily expiry reminders
+- daily compliance alerts
 - inspection status updates
 
-### Expiry Reminders
+### Daily Compliance Alerts
 
 1. A scheduled job runs every day.
-2. It finds vehicles with insurance or licence expiry exactly 14 days away.
-3. It saves an in-app notification.
+2. It scans active vehicles for invalid, expired, or 14-day upcoming compliance records and failed inspections.
+3. It saves one de-duplicated in-app alert per vehicle per day.
 4. It sends an email reminder.
-5. It prevents duplicates using event metadata.
+5. Failed email delivery is retried by the delivery worker.
 
 ### Inspection Updates
 
@@ -197,7 +197,7 @@ The system sends two main notification types:
 ### What To Say
 
 - "Notification logic is centralized so email and database records stay in sync."
-- "The expiry reminder job is scheduled and de-duplicated."
+- "The daily compliance job is scheduled and de-duplicated, while failed email delivery is retried separately."
 
 ## 8. Admin And Officer Responsibilities
 
