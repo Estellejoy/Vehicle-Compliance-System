@@ -1,9 +1,9 @@
--- Give Jemima an owner role for portal testing while preserving her officer role.
+-- Let Jemima use both the officer and owner dashboards.
 INSERT INTO user_roles (user_id, role, is_primary)
 VALUES (55, 'owner', 0)
 ON DUPLICATE KEY UPDATE is_primary = VALUES(is_primary);
 
--- Jemima's first vehicle is compliant and already inspected.
+-- Add one normal vehicle for the portal test.
 INSERT INTO vehicles (
     vehicle_id, owner_id, plate_number, make, model, year,
     inspection_status, inspection_checked_at, inspection_checked_by, inspection_failure_reason
@@ -20,7 +20,7 @@ ON DUPLICATE KEY UPDATE
     inspection_checked_by = VALUES(inspection_checked_by),
     inspection_failure_reason = VALUES(inspection_failure_reason);
 
--- The second vehicle gives the portal a visible non-compliant/failed-inspection case.
+-- Add one vehicle with issues so alerts can be tested.
 INSERT INTO vehicles (
     vehicle_id, owner_id, plate_number, make, model, year,
     inspection_status, inspection_checked_at, inspection_checked_by, inspection_failure_reason

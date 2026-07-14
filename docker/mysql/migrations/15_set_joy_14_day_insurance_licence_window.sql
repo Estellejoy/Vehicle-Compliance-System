@@ -1,4 +1,4 @@
--- Joy's demo vehicle is used to demonstrate the 14-day daily reminder window.
+-- Keep Joy's demo vehicle inside the 14-day reminder window.
 INSERT INTO vehicles (
     vehicle_id, owner_id, plate_number, make, model, year, inspection_status
 )

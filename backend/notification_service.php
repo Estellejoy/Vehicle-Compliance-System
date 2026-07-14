@@ -99,7 +99,7 @@ function vcs_insert_notification(PDO $pdo, array $data): int
 
         return (int) $pdo->lastInsertId();
     } catch (PDOException $e) {
-        // The event uniqueness key is an intentional idempotency guard.
+        // A duplicate event means this alert was already created.
         $mysqlErrorCode = (int) ($e->errorInfo[1] ?? 0);
         if ($mysqlErrorCode === 1062) {
             return 0;
@@ -308,6 +308,7 @@ function vcs_attempt_email_delivery(PDO $pdo, int $deliveryId): bool
     return false;
 }
 
+// Save the email first so a temporary mail problem can be retried later.
 function vcs_send_notification_email(
     PDO $pdo,
     int $notificationId,
@@ -435,6 +436,7 @@ function vcs_send_owner_inspection_notification(
 
 function vcs_compliance_issues(array $vehicle, string $today): array
 {
+    // Collect all problems so the owner gets one clear alert per vehicle.
     $issues = [];
     if (empty($vehicle['compliance_vehicle_id'])) {
         $issues[] = 'compliance record is missing';
@@ -516,7 +518,7 @@ function vcs_send_owner_compliance_notification(PDO $pdo, array $vehicle, array 
 
 function vcs_send_expiry_notifications(PDO $pdo): array
 {
-    // The command name is retained for compatibility; it now sends all daily compliance alerts.
+    // Keep the old command name, but use it for the wider daily alert check.
     $today = vcs_notification_today();
     $results = [
         'scanned' => 0,

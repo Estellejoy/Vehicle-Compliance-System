@@ -7,7 +7,7 @@ require_once __DIR__ . '/../config/mail.php';
 
 function register_wants_json(): bool
 {
-    // The register page supports both normal form posts and AJAX submissions.
+    // This supports both the normal form and the AJAX version of registration.
     $requestedWith = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
     $accept = strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
 
@@ -16,7 +16,7 @@ function register_wants_json(): bool
 
 function register_respond(array $payload, int $statusCode = 200): void
 {
-    // Keep browser redirects and JSON responses in one place.
+    // Send the response in the format the page requested.
     if (register_wants_json()) {
         http_response_code($statusCode);
         header('Content-Type: application/json; charset=utf-8');
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Validate everything before touching the database.
+// Check the form first so invalid data is never saved.
 $name = trim($_POST['name'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $password = (string) ($_POST['password'] ?? '');
@@ -85,7 +85,7 @@ try {
     $tokenExpiresAt = (new DateTimeImmutable('+24 hours'))->format('Y-m-d H:i:s');
     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-    // New accounts start inactive until the email verification link is used.
+    // The account stays inactive until the owner verifies the email.
     $insert = $pdo->prepare(
         "INSERT INTO users (
             name,
@@ -115,15 +115,14 @@ try {
         'token_expires_at' => $tokenExpiresAt,
     ]);
 
-    // Capture the generated ID immediately and use it for the related role row.
-    // This also prevents a partial account if role creation fails.
+    // Save the new ID before creating the matching owner role.
     $registeredUserId = (int) $pdo->lastInsertId();
     if ($registeredUserId <= 0) {
         throw new RuntimeException('The database did not return the new user ID.');
     }
 
     if (vcs_has_table($pdo, 'user_roles')) {
-        // Mirror the primary owner role in the normalized role table when present.
+        // Keep the user's role in the separate role table as well.
         $rolesInsert = $pdo->prepare(
             'INSERT INTO user_roles (user_id, role, is_primary)
              VALUES (:user_id, :role, 1)
