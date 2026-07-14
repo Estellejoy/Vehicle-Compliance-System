@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Show the password form for the current authenticated account.
 if (!isset($_SESSION['user_id'])) {
     header('Location: /login');
     exit;

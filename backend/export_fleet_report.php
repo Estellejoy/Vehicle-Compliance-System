@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Build a printable report containing the owner's fleet and inspection details.
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'owner') {
     header('Location: /login');
     exit;

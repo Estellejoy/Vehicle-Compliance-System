@@ -1,3 +1,4 @@
+# Use Apache with PHP and the database extensions required by the application.
 FROM php:8.2-apache
 
 RUN apt-get update \

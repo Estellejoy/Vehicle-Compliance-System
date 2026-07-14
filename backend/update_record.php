@@ -10,7 +10,7 @@ require_once '../config/db.php';
 require_once __DIR__ . '/auth_helpers.php';
 require_once __DIR__ . '/notification_service.php';
 
-// Inspection changes are accepted only from an authenticated officer.
+// This handler receives the officer's inspection form and updates one vehicle.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: ../views/officer_dashboard.php');
     exit;
@@ -55,6 +55,7 @@ try {
         exit;
     }
 
+    // Read the failure explanation before allowing a failed inspection to be saved.
     if ($action === 'mark_failed' && $failureReason === '') {
         header('Location: /views/officer_dashboard.php?error=failure_reason_required');
         exit;
@@ -122,7 +123,7 @@ try {
         'failure_reason' => $action === 'mark_failed' ? $failureReason : null,
     ]);
 
-    // Commit the vehicle update before attempting email delivery.
+    // Save the inspection result first; email delivery is handled separately below.
     $pdo->commit();
 
     try {
@@ -146,6 +147,7 @@ try {
             $failureReason
         );
 
+        // The notification is saved even when its email must be retried later.
         if (!$notificationResult['saved'] && !$notificationResult['duplicate']) {
             throw new RuntimeException('Inspection notification could not be saved.');
         }

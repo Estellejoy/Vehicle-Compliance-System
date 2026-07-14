@@ -1,3 +1,4 @@
+-- Fill missing service notes and mileage values for older records.
 UPDATE service_records
 SET service_notes = COALESCE(
         service_notes,

@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once '../config/db.php';
 
-// The portal shows vehicles and alerts belonging only to the signed-in owner.
+// Load the signed-in owner's vehicles and show their current portal information.
 $user_id = (int) $_SESSION['user_id'];
 $user_name = $_SESSION['name'] ?? 'Citizen';
 $role = $_SESSION['role'];
@@ -57,6 +57,7 @@ try {
 
     $complianceStmt = $pdo->prepare(
         "SELECT
+            /* Compliance status and failed inspections both affect the summary. */
             SUM(
                 CASE
                     WHEN c.insurance_status = 'Valid'
@@ -87,7 +88,7 @@ try {
     $fully_compliant_vehicles = (int) ($complianceSummary['fully_compliant_count'] ?? 0);
     $non_compliant_vehicles = (int) ($complianceSummary['non_compliant_count'] ?? 0);
 
-    // Load recent alerts here so owners can see them without opening each vehicle.
+    // Fetch the owner's recent notifications for the alerts section below.
     $notificationStmt = $pdo->prepare(
         'SELECT notification_id, notification_type, message, status, date_sent, created_at
          FROM notifications
@@ -97,6 +98,7 @@ try {
     );
     $notificationStmt->execute(['user_id' => $user_id]);
     $notifications = $notificationStmt->fetchAll();
+    // Count the notifications that still need the owner's attention.
     $unread_notifications = count(array_filter($notifications, static fn ($notification) => strcasecmp((string) ($notification['status'] ?? ''), 'Read') !== 0));
 
     if ($total_vehicles === 0) {

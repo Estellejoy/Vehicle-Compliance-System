@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Store a service report and attach it to the selected vehicle.
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'officer') {
     header('Location: /login');
     exit;

@@ -1,3 +1,4 @@
+-- Store messages submitted through the public feedback form.
 CREATE TABLE IF NOT EXISTS feedback_messages (
     feedback_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL,

@@ -1,3 +1,4 @@
+-- Store one-time login codes as hashes with an expiry time.
 CREATE TABLE IF NOT EXISTS login_verification_tokens (
     token_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,

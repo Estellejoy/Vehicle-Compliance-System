@@ -1,3 +1,4 @@
+-- Store the uploaded file information for a service report.
 ALTER TABLE service_records
     ADD COLUMN service_report_path VARCHAR(255) NULL AFTER service_details,
     ADD COLUMN service_report_name VARCHAR(255) NULL AFTER service_report_path,

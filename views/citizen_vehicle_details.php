@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'owner') {
 require_once '../config/db.php';
 require_once __DIR__ . '/../backend/auth_helpers.php';
 
-// Vehicle details are restricted to the owner recorded on the vehicle.
+// This page loads one vehicle and its compliance, service, and inspection details.
 function h($value): string
 {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
@@ -85,6 +85,7 @@ if ($vehicleId <= 0) {
             'vehicle_id' => $vehicleId,
             'owner_id' => $userId,
         ]);
+        // The query only returns the vehicle when it belongs to the signed-in owner.
         $vehicle = $stmt->fetch();
 
         if (!$vehicle) {

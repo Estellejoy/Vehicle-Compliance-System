@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Show login errors, verification links, and one-time codes from the session.
 $flash = $_SESSION['flash_message'] ?? null;
 $flashType = $_SESSION['flash_type'] ?? null;
 $flashLink = $_SESSION['flash_link'] ?? null;

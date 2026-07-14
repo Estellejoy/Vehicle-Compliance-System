@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Clear the session so the next request is treated as logged out.
 $_SESSION = [];
 
 if (ini_get('session.use_cookies')) {

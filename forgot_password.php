@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Display the result of the most recent password reset request.
 $flash = $_SESSION['forgot_password_flash'] ?? null;
 unset($_SESSION['forgot_password_flash']);
 

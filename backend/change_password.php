@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// This handler changes the password for the currently signed-in user.
 if (!isset($_SESSION['user_id'])) {
     header('Location: /login');
     exit;

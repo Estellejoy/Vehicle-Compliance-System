@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/db.php';
 
+// Fill missing hashes using the seeded email-based demo password format.
 $stmt = $pdo->query("SELECT user_id, email FROM users WHERE password_hash IS NULL OR password_hash = ''");
 $users = $stmt->fetchAll();
 

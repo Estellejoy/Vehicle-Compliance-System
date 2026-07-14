@@ -1,3 +1,4 @@
+-- Add the badge number used to identify inspecting officers.
 ALTER TABLE users
     ADD COLUMN badge_number VARCHAR(30) NULL UNIQUE AFTER role;
 

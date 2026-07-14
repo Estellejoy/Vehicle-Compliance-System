@@ -1,3 +1,4 @@
+-- Add the vehicle and event fields used to prevent duplicate alerts.
 ALTER TABLE notifications
     ADD COLUMN vehicle_id INT NULL AFTER user_id,
     ADD COLUMN event_code VARCHAR(100) NULL AFTER notification_type,

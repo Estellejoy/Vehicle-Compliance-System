@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Save profile and compliance details submitted by an authorized staff user.
 if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['role'] ?? ''), ['admin', 'officer'], true)) {
     header('Location: /login');
     exit;

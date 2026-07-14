@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Load one vehicle record for viewing or printing by an authorized user.
 $role = $_SESSION['role'] ?? '';
 if (!isset($_SESSION['user_id']) || !in_array($role, ['admin', 'officer', 'owner'], true)) {
     header('Location: /login');

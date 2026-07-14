@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'officer') {
 require_once '../config/db.php';
 require_once __DIR__ . '/../backend/auth_helpers.php';
 
-// Officers use this page to review vehicles and record inspection results.
+// This dashboard lets officers search for vehicles and submit inspection results.
 function h($value)
 {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
@@ -56,6 +56,7 @@ $inspectionFeatureEnabled = false;
 $inspectionCheckedByBadgeColumn = false;
 $inspectionFailureReasonColumn = false;
 
+// Display a success message after the update handler redirects back here.
 if (isset($_GET['updated'])) {
     $message = 'Inspection status updated successfully.';
     $messageType = 'success';
@@ -76,6 +77,7 @@ try {
     $inspectionCheckedByColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_checked_by'")->fetch();
     $inspectionFailureReasonColumn = $pdo->query("SHOW COLUMNS FROM vehicles LIKE 'inspection_failure_reason'")->fetch();
     $inspectionCheckedByBadgeColumn = vcs_has_column($pdo, 'users', 'badge_number');
+    // Check the required columns before displaying the inspection form.
     $inspectionFeatureEnabled = (bool) $inspectionStatusColumn && (bool) $inspectionCheckedAtColumn && (bool) $inspectionCheckedByColumn && (bool) $inspectionFailureReasonColumn;
 } catch (PDOException $e) {
     error_log($e->getMessage());

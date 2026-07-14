@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Display the result of the latest registration attempt.
 $flash = $_SESSION['register_flash'] ?? null;
 unset($_SESSION['register_flash']);
 ?>

@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Admin actions update user accounts and password recovery settings.
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
     header('Location: /login');
     exit;

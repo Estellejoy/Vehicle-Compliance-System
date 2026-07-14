@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Update the primary and additional owners attached to a vehicle.
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
     header('Location: /login');
     exit;

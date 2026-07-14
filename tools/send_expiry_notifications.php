@@ -3,7 +3,7 @@
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../backend/notification_service.php';
 
-// The scheduler calls this job directly; it is not a web endpoint.
+// This file starts the daily scan when it is called by cron.
 if (PHP_SAPI !== 'cli') {
     http_response_code(403);
     echo "This script is intended to run from the command line.\n";
@@ -11,7 +11,7 @@ if (PHP_SAPI !== 'cli') {
 }
 
 try {
-    // One run checks every active vehicle and creates any alerts due today.
+    // Scan the vehicles, create today's in-app alerts, and queue their emails.
     $results = vcs_send_expiry_notifications($pdo);
 
     echo sprintf(

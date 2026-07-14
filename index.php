@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Load any feedback message before rendering the public landing page.
 $feedbackFlash = $_SESSION['feedback_flash'] ?? null;
 unset($_SESSION['feedback_flash']);
 ?>

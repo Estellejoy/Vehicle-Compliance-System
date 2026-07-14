@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// The admin panel displays system totals and account management actions.
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
     header('Location: /login');
     exit;

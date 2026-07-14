@@ -1,3 +1,4 @@
+# Give the main pages short, user-friendly URLs.
 RewriteEngine On
 
 RewriteRule ^login/?$ login.php [L,QSA]

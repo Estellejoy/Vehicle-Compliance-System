@@ -1,5 +1,6 @@
 <?php
 
+// Read local environment settings when Docker or Apache has not supplied them.
 function vcs_load_env_file(?string $path = null): void
 {
     static $loaded = false;

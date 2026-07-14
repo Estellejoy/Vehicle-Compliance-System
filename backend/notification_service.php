@@ -5,6 +5,7 @@ require_once __DIR__ . '/auth_helpers.php';
 
 function vcs_notification_now(): DateTimeImmutable
 {
+    // Get the current date and time in Nairobi, which is used for alert dates.
     return new DateTimeImmutable('now', new DateTimeZone('Africa/Nairobi'));
 }
 
@@ -20,6 +21,7 @@ function vcs_notification_timestamp(?DateTimeImmutable $moment = null): string
 
 function vcs_notification_event_code(string $kind, int $vehicleId, string $eventDate): string
 {
+    // Combine the alert type, vehicle, and date into one identifier for the event.
     return strtolower(trim($kind)) . ':' . $vehicleId . ':' . $eventDate;
 }
 
@@ -56,6 +58,7 @@ function vcs_notification_has_schema(PDO $pdo): bool
 
 function vcs_insert_notification(PDO $pdo, array $data): int
 {
+    // Save an in-app notification and return its database ID.
     $hasSchema = vcs_notification_has_schema($pdo);
     $baseColumns = [
         'user_id' => (int) ($data['user_id'] ?? 0),
@@ -256,6 +259,7 @@ function vcs_attempt_email_delivery(PDO $pdo, int $deliveryId): bool
     );
     $claim->execute(['delivery_id' => $deliveryId]);
 
+    // Claim the row so two worker runs do not send the same email at once.
     if ($claim->rowCount() !== 1) {
         return false;
     }
@@ -308,7 +312,7 @@ function vcs_attempt_email_delivery(PDO $pdo, int $deliveryId): bool
     return false;
 }
 
-// Save the email first so a temporary mail problem can be retried later.
+// Store the email details, try delivery immediately, and leave failed messages for the worker.
 function vcs_send_notification_email(
     PDO $pdo,
     int $notificationId,
@@ -436,7 +440,7 @@ function vcs_send_owner_inspection_notification(
 
 function vcs_compliance_issues(array $vehicle, string $today): array
 {
-    // Collect all problems so the owner gets one clear alert per vehicle.
+    // Check the compliance fields and build the list of problems for this vehicle.
     $issues = [];
     if (empty($vehicle['compliance_vehicle_id'])) {
         $issues[] = 'compliance record is missing';
@@ -459,6 +463,7 @@ function vcs_compliance_issues(array $vehicle, string $today): array
             $daysUntilExpiry = (int) (new DateTimeImmutable($today, new DateTimeZone('Africa/Nairobi')))
                 ->diff(new DateTimeImmutable($expiry, new DateTimeZone('Africa/Nairobi')))
                 ->format('%r%a');
+            // Days 14 through 1 receive a reminder; the expiry day is handled as expired.
             if ($daysUntilExpiry >= 1 && $daysUntilExpiry <= 14) {
                 $issues[] = $label . ' expires in ' . $daysUntilExpiry . ' days on ' . $expiry;
             }

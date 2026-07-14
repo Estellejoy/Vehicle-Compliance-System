@@ -7,7 +7,7 @@ require_once __DIR__ . '/../config/mail.php';
 
 function register_wants_json(): bool
 {
-    // This supports both the normal form and the AJAX version of registration.
+    // Return JSON for an AJAX request or redirect back to the registration page.
     $requestedWith = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
     $accept = strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
 
@@ -16,7 +16,7 @@ function register_wants_json(): bool
 
 function register_respond(array $payload, int $statusCode = 200): void
 {
-    // Send the response in the format the page requested.
+    // Use the response format expected by the browser request.
     if (register_wants_json()) {
         http_response_code($statusCode);
         header('Content-Type: application/json; charset=utf-8');
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Check the form first so invalid data is never saved.
+// Validate the submitted name, email, and password before inserting the account.
 $name = trim($_POST['name'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $password = (string) ($_POST['password'] ?? '');
@@ -78,6 +78,7 @@ try {
         ], 409);
     }
 
+    // Start a transaction so the user and owner role are created together.
     $pdo->beginTransaction();
 
     $token = bin2hex(random_bytes(32));
@@ -134,6 +135,7 @@ try {
         ]);
     }
 
+    // Finish the database work before preparing and sending the verification email.
     $pdo->commit();
 
     $appUrl = rtrim(getenv('APP_URL') ?: 'http://localhost:8080', '/');

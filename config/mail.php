@@ -5,7 +5,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 
-// All application emails use the same SMTP setup and mail helper.
+// The functions below build the different messages used by the application.
 function sendVerificationEmail(string $toEmail, string $toName, string $verifyLink): bool
 {
     $subject = 'Verify your Vehicle Compliance System account';
@@ -107,12 +107,13 @@ function sendMailMessage(string $toEmail, string $toName, string $subject, strin
     $replyToAddress = trim((string) (getenv('MAIL_REPLY_TO_ADDRESS') ?: $fromAddress));
     $smtpAuth = true;
 
-    // A missing host means the server cannot attempt delivery.
+    // Read the SMTP settings before creating the PHPMailer message.
     if ($host === '') {
         error_log('Email not sent: MAIL_HOST is missing. Add a root .env file or inject SMTP settings into the runtime.');
         return false;
     }
 
+    // Switch to the local Mailpit server when Gmail has no credentials.
     if ($host === 'smtp.gmail.com' && ($username === '' || $password === '')) {
         $host = 'mailpit';
         $port = 1025;
@@ -149,6 +150,7 @@ function sendMailMessage(string $toEmail, string $toName, string $subject, strin
             $mailer->SMTPAutoTLS = false;
         }
 
+        // Set both HTML and plain-text versions so the email works in different inboxes.
         $mailer->isHTML(true);
         $mailer->Subject = $subject;
         $mailer->Body = $htmlBody;

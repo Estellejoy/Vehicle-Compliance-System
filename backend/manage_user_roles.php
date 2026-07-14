@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Administrators use this handler to add or remove account roles.
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
     header('Location: /login');
     exit;

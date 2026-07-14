@@ -1,3 +1,4 @@
+-- Fill missing vehicle details used by reports and vehicle profiles.
 UPDATE vehicles
 SET chassis_number = COALESCE(
         chassis_number,

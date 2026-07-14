@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// This report summarizes compliance and inspection activity for administrators.
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
     header('Location: /login');
     exit;

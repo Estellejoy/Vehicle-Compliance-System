@@ -1,3 +1,4 @@
+-- Store the roles that each account is allowed to use.
 CREATE TABLE IF NOT EXISTS user_roles (
     user_role_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,

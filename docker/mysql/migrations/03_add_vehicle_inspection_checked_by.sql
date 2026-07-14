@@ -1,3 +1,4 @@
+-- Link the last inspection to the officer who performed it.
 ALTER TABLE vehicles
     ADD COLUMN inspection_checked_by INT NULL AFTER inspection_checked_at,
     ADD CONSTRAINT fk_vehicles_inspection_checked_by
