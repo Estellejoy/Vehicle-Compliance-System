@@ -2,5 +2,6 @@ SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 CRON_TZ=Africa/Nairobi
 
+# Retry failed emails frequently, then run the daily scan at 10:00.
 */5 * * * * root flock -n /var/run/vcs-notifications.lock -c 'cd /var/www/html && /usr/local/bin/php /var/www/html/tools/process_notification_deliveries.php' >> /proc/1/fd/1 2>&1
 0 10 * * * root flock -n /var/run/vcs-notifications.lock -c 'cd /var/www/html && /usr/local/bin/php /var/www/html/tools/send_expiry_notifications.php' >> /proc/1/fd/1 2>&1

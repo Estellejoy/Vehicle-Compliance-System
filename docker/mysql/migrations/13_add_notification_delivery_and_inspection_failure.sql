@@ -1,6 +1,8 @@
+-- Store the reason when an officer records a failed inspection.
 ALTER TABLE vehicles
     ADD COLUMN inspection_failure_reason VARCHAR(255) NULL AFTER inspection_checked_by;
 
+-- Keep email delivery separate so failed messages can be retried.
 CREATE TABLE IF NOT EXISTS notification_deliveries (
     delivery_id BIGINT AUTO_INCREMENT PRIMARY KEY,
     notification_id INT NOT NULL,

@@ -27,6 +27,7 @@ services:
       db:
         condition: service_healthy
 
+  # Runs the daily compliance scan and retries failed emails.
   scheduler:
     build: .
     container_name: vehicle-compliance-scheduler

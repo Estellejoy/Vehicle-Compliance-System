@@ -1,3 +1,4 @@
+-- Core tables used by the application.
 CREATE TABLE IF NOT EXISTS users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,

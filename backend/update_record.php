@@ -10,6 +10,7 @@ require_once '../config/db.php';
 require_once __DIR__ . '/auth_helpers.php';
 require_once __DIR__ . '/notification_service.php';
 
+// Inspection changes are accepted only from an authenticated officer.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: ../views/officer_dashboard.php');
     exit;
@@ -121,6 +122,7 @@ try {
         'failure_reason' => $action === 'mark_failed' ? $failureReason : null,
     ]);
 
+    // Commit the vehicle update before attempting email delivery.
     $pdo->commit();
 
     try {

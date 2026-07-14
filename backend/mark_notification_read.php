@@ -9,6 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once __DIR__ . '/../config/db.php';
 
+// The user check in the update prevents marking another user's alert as read.
 $notificationId = (int) ($_POST['notification_id'] ?? 0);
 if ($notificationId <= 0 || $_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: /views/citizen_portal.php');

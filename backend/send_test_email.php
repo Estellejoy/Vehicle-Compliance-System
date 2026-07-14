@@ -3,6 +3,7 @@
 session_start();
 header('Content-Type: application/json; charset=UTF-8');
 
+// Keep this diagnostic endpoint available to administrators only.
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
     http_response_code(403);
     echo json_encode(['ok' => false, 'message' => 'Administrator access is required.']);

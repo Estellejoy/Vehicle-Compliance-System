@@ -5,6 +5,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 
+// All application emails use the same SMTP setup and mail helper.
 function sendVerificationEmail(string $toEmail, string $toName, string $verifyLink): bool
 {
     $subject = 'Verify your Vehicle Compliance System account';
@@ -106,6 +107,7 @@ function sendMailMessage(string $toEmail, string $toName, string $subject, strin
     $replyToAddress = trim((string) (getenv('MAIL_REPLY_TO_ADDRESS') ?: $fromAddress));
     $smtpAuth = true;
 
+    // A missing host means the server cannot attempt delivery.
     if ($host === '') {
         error_log('Email not sent: MAIL_HOST is missing. Add a root .env file or inject SMTP settings into the runtime.');
         return false;

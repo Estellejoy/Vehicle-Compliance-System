@@ -9,6 +9,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'officer') {
 require_once '../config/db.php';
 require_once __DIR__ . '/../backend/auth_helpers.php';
 
+// Officers use this page to review vehicles and record inspection results.
 function h($value)
 {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
